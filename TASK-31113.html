@@ -427,6 +427,46 @@ AND (
     </div>
   </div>
 
+  <!-- Recurrence Risk -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Recurrence Risk</div>
+    <table>
+      <thead>
+        <tr><th>Issue</th><th>Risk</th><th>Will It Recur?</th><th>Action Required Until Permanent Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Issue 1 &mdash; <code>TallyPosted</code> set by mistake blocking Cheque Request</td>
+          <td style="color: #e67e22; font-weight: 700;">Low</td>
+          <td>
+            Possible but not systematic. Can occur if a user or process sets <code>TallyPosted = 1</code>
+            before the entry has gone through Cheque Request (<code>ChqReqSent</code> still NULL).
+            This is an invalid state that the system does not currently prevent.
+          </td>
+          <td>
+            When a Cheque Request entry goes missing, always check <code>TallyPosted</code> and
+            <code>ChqReqSent</code> together. If <code>TallyPosted = 1</code> and <code>ChqReqSent IS NULL</code>,
+            reset <code>TallyPosted = NULL</code> after Finance confirmation.
+          </td>
+        </tr>
+        <tr>
+          <td>Issue 2 &mdash; Old <code>BookingDate</code> failing SP cutoff for recent invoices</td>
+          <td style="color: #c0392b; font-weight: 700;">High</td>
+          <td>
+            Yes — until the permanent SP fix is applied, any invoice added to a booking created before
+            the cutoff date (pre-2025 for most branches, pre-2026 for branch Y) will be blocked from
+            the Cheque Request page, regardless of how recent the invoice itself is.
+          </td>
+          <td>
+            Temp fix: update <code>BookingDate</code> to today so it passes the SP cutoff, then revert
+            after the cheque request is processed. Permanent fix pending — <code>ff.Get_2ChequeRequest</code>
+            needs to be updated to also allow records where <code>VendorInvDate &gt;= cutoff</code>.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
   <!-- Tables involved -->
   <div style="margin-bottom: 28px;">
     <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Tables &amp; Objects Involved</div>

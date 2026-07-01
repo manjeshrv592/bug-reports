@@ -420,6 +420,34 @@ WHERE JobId = 84462
   </div>
 
 
+  <!-- Recurrence Risk -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Recurrence Risk</div>
+    <table>
+      <thead>
+        <tr><th>Issue</th><th>Risk</th><th>Will It Recur?</th><th>Action Required Until Permanent Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Invoice numbers not appearing on Job Cost Sheet for multi-HBL bookings</td>
+          <td style="color: #c0392b; font-weight: 700;">High</td>
+          <td>
+            Yes — this is a systematic bug in the invoice finalization code. Every time an invoice is raised
+            against a multi-HBL booking, <code>Invoice_Rate.JobId</code> will be set to the primary HBL instead
+            of the HBL where the revenue lives. The cost sheet will silently show blank invoice numbers each time.
+          </td>
+          <td>
+            Apply both fixes manually for each affected job:<br/>
+            1. Correct <code>Invoice_Rate.JobId</code> to match the HBLID where <code>IRevenue</code> records live<br/>
+            2. Deactivate the orphaned unlinked <code>Invoice_Rate</code> records (<code>InvoiceID IS NULL</code>) for the same RevenueIDs<br/>
+            See Fix 1 and Fix 2 in the Solution section. A permanent fix requires the invoice finalization
+            routine to be corrected in the application code.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
   <!-- Observations -->
   <div style="margin-bottom: 28px;">
     <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Observations</div>

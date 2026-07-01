@@ -229,6 +229,25 @@ Copy the full HTML below and replace every `<!-- TODO -->` placeholder.
   <!-- Copy the entire .issue-block above for each additional issue, incrementing id="issue-2" etc. -->
 
 
+  <!-- Recurrence Risk — always include this section -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Recurrence Risk</div>
+    <table>
+      <thead>
+        <tr><th>Issue</th><th>Risk</th><th>Will It Recur?</th><th>Action Required Until Permanent Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><!-- TODO: issue name --></td>
+          <td style="color: #c0392b; font-weight: 700;"><!-- High / Medium / Low --></td>
+          <td><!-- TODO: yes/no and why --></td>
+          <td><!-- TODO: what to do each time until code is fixed --></td>
+        </tr>
+        <!-- Add one row per issue -->
+      </tbody>
+    </table>
+  </div>
+
   <!-- OPTIONAL: Observations — use when post-fix review reveals rows or states that look wrong but are expected/not bugs -->
   <!--
   <div style="margin-bottom: 28px;">
