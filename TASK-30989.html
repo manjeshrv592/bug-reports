@@ -1,0 +1,331 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TASK-30989 &mdash; Job Cost Sheet</title>
+  <style>
+    html { scroll-behavior: smooth; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 13px;
+      color: #1a1a1a;
+      background: #fff;
+      padding: 40px;
+      max-width: 940px;
+      margin: auto;
+    }
+
+    .header { background: #1a3c6e; color: #fff; padding: 24px 28px; border-radius: 6px; margin-bottom: 28px; }
+    .header h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .header p { font-size: 12px; color: #b0c4de; }
+
+    .meta-box {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #f4f7fb;
+      border: 1px solid #d0dbe8;
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin-bottom: 32px;
+    }
+    .meta-box .item label { font-size: 11px; color: #6b7a90; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px; }
+    .meta-box .item span { font-weight: 600; color: #1a1a1a; }
+
+    .page-index { background: #f4f7fb; border: 1px solid #d0dbe8; border-radius: 6px; padding: 14px 20px; margin-bottom: 28px; }
+    .page-index p { font-size: 11px; font-weight: 700; color: #6b7a90; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .page-index ol { margin: 0; padding-left: 18px; }
+    .page-index li { margin-bottom: 4px; }
+    .page-index a { font-size: 13px; color: #1a3c6e; text-decoration: none; }
+    .page-index a:hover { text-decoration: underline; }
+
+    .issue-block { border: 1px solid #d0dbe8; border-radius: 8px; margin-bottom: 36px; overflow: hidden; }
+    .issue-header { background: #1a3c6e; color: #fff; padding: 14px 20px; }
+    .issue-header h2 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .issue-header p { font-size: 12px; color: #b0c4de; }
+    .issue-body { padding: 20px; }
+
+    .takeaway { background: #f0f4ff; border-left: 4px solid #1a3c6e; border-radius: 0 5px 5px 0; padding: 11px 16px; margin-bottom: 18px; font-size: 12.5px; color: #1a1a1a; line-height: 1.6; }
+    .takeaway strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7a90; margin-bottom: 4px; }
+
+    .sec { margin-bottom: 22px; }
+    .sec-title { font-size: 13px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px; }
+    .sec p { line-height: 1.7; color: #333; margin-bottom: 8px; }
+
+    .step { border: 1px solid #e0e7ef; border-radius: 6px; margin-bottom: 14px; overflow: hidden; }
+    .step-header { background: #e8eef7; color: #1a3c6e; padding: 8px 14px; font-weight: 600; font-size: 12.5px; }
+    .step-body { padding: 14px 16px; }
+    .step-body p { margin-bottom: 8px; line-height: 1.6; color: #333; }
+
+    pre {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 14px 16px;
+      border-radius: 5px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin: 10px 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .result-box {
+      background: #f0f4f0;
+      border: 1px solid #b2d0b2;
+      border-radius: 5px;
+      padding: 10px 14px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      color: #1a1a1a;
+      margin: 10px 0;
+      white-space: pre-wrap;
+    }
+
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+    th { background: #1a3c6e; color: #fff; padding: 8px 10px; text-align: left; font-weight: 600; }
+    td { padding: 7px 10px; border-bottom: 1px solid #e0e7ef; vertical-align: top; }
+    tr:nth-child(even) td { background: #f4f7fb; }
+    .highlight-row td { background: #fdecea !important; }
+    .pass { color: #1a7a1a; font-weight: 700; }
+    .fail { color: #c0392b; font-weight: 700; }
+
+    .alert { border-radius: 5px; padding: 12px 16px; margin: 12px 0; font-size: 12.5px; line-height: 1.6; }
+    .alert-danger  { background: #fdecea; border-left: 4px solid #c0392b; color: #7b1e1e; }
+    .alert-warning { background: #fff8e1; border-left: 4px solid #f39c12; color: #7a5c00; }
+    .alert-info    { background: #e8f4fb; border-left: 4px solid #2980b9; color: #1a4a6e; }
+    .alert strong  { display: block; margin-bottom: 4px; }
+
+    .back-link { display: inline-block; margin-bottom: 20px; font-size: 12px; color: #1a3c6e; text-decoration: none; }
+    .back-link:hover { text-decoration: underline; }
+
+    .footer { margin-top: 36px; border-top: 1px solid #d0dbe8; padding-top: 14px; font-size: 11px; color: #888; display: flex; justify-content: space-between; }
+
+    @media print {
+      body { padding: 20px; }
+      .issue-block { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-link">&larr; Back to Bug Reports Index</a>
+
+  <div class="header">
+    <h1>TASK-30989 &mdash; Invoice Numbers Not Appearing on Job Cost Sheet</h1>
+    <p>System: BLISS &nbsp;|&nbsp; Module: Reports &gt; Job Cost Sheet &nbsp;|&nbsp; SP: ff.Costsheet_I &nbsp;|&nbsp; Date: 01 July 2026</p>
+  </div>
+
+  <div class="meta-box">
+    <div class="item"><label>Task</label><span>30989</span></div>
+    <div class="item"><label>Module</label><span>Job Cost Sheet</span></div>
+    <div class="item"><label>Date Investigated</label><span>01 Jul 2026</span></div>
+    <div class="item"><label>Issues in Task</label><span>1</span></div>
+  </div>
+
+  <div class="page-index">
+    <p>Issues in this report</p>
+    <ol>
+      <li><a href="#issue-1">Invoice numbers 26704183 &amp; 26704184 missing from cost sheet &mdash; Job 2603498 (Antwerp)</a></li>
+    </ol>
+  </div>
+
+
+  <!-- ===========================
+       ISSUE 1
+       =========================== -->
+  <div class="issue-block" id="issue-1">
+    <div class="issue-header">
+      <h2>Issue 1 &mdash; Invoice Numbers Not Appearing on Job Cost Sheet</h2>
+      <p>Job: 2603498 &nbsp;|&nbsp; Branch: Antwerp (W) &nbsp;|&nbsp; BookingID: 81203 &nbsp;|&nbsp; HBLID: 83970 / 84462 &nbsp;|&nbsp; Invoices: 26704183, 26704184</p>
+    </div>
+    <div class="issue-body">
+
+      <div class="takeaway">
+        <strong>Key Takeaway</strong>
+        When a booking has multiple HBLs, the invoice can be finalized with the wrong <code>Invoice_Rate.JobId</code>. The SP joins <code>ir.JobId = r.HBLID</code> — if these don't match, the invoice number is silently absent from the cost sheet even though the invoice exists and all status flags are valid.
+      </div>
+
+      <!-- Problem -->
+      <div class="sec">
+        <div class="sec-title">Problem</div>
+        <p>
+          Invoices <strong>26704183</strong> and <strong>26704184</strong> were finalized on <strong>27 May 2026</strong> for Job <strong>2603498</strong>
+          (Antwerp branch, customers Boxon GmbH and Boxon SARL). However, the invoice numbers were not appearing
+          in the revenue rows of the Job Cost Sheet.
+        </p>
+        <p>
+          The cost sheet is generated by calling <code>ff.Costsheet_I @ID=81203</code> via
+          <code>GET /api/master-api/report/getCostSheetHtml?JobID=81203&amp;spname=ff.Costsheet_I</code>.
+          The revenue rows rendered in the HTML response showed empty <code>Vendor Inv</code> cells for all charges
+          except Emergency Bunker Surcharge (invoices 26704927/26704928, finalized 16 Jun 2026), which appeared correctly.
+        </p>
+      </div>
+
+      <!-- Investigation -->
+      <div class="sec">
+        <div class="sec-title">Investigation</div>
+
+        <div class="step">
+          <div class="step-header">Step 1 &mdash; Get BookingID and HBLIDs for the job</div>
+          <div class="step-body">
+            <p>The SP uses <code>@ID</code> as both <code>@BookingID</code> and populates a table variable with the HBLIDs. First confirmed the booking structure.</p>
+            <pre>SELECT b.BookingID, b.BookingNo, h.HBLID, h.HBLNo
+FROM ff.BBooking_Import b
+JOIN ff.BBooking_Import_HBL h ON h.BookingID = b.BookingID
+WHERE b.BookingNo = '2603498' AND b.isActive = 1</pre>
+            <div class="result-box">BookingID  BookingNo  HBLID  HBLNo
+81203      2603498    83970  2603498
+81203      2603498    84462  7260094</div>
+            <p>This booking has two HBLs: HBLID <strong>83970</strong> (primary HBL 2603498) and HBLID <strong>84462</strong> (HBL 7260094).</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 2 &mdash; Check which invoices are linked and verify their status</div>
+          <div class="step-body">
+            <p>
+              The SP joins <code>ff.Invoice_Rate</code> to <code>ff.Invoice</code> and filters out records where
+              <code>InvStatus &gt; 50</code>. Queried from the Invoice side to avoid row explosion.
+            </p>
+            <pre>SELECT
+    i.InvoiceID, i.InvoiceNumber, i.InvoiceDate,
+    i.InvStatus            AS Invoice_InvStatus,
+    ir.InvRateId, ir.JobId, ir.RevenueID,
+    ir.Segment, ir.isActive AS IR_isActive,
+    ir.InvStatus           AS IR_InvStatus
+FROM ff.Invoice i
+JOIN ff.Invoice_Rate ir ON ir.InvoiceID = i.InvoiceID
+WHERE ir.JobId IN (83970, 84462)
+  AND LEFT(ir.Segment, 1) = 'I'
+ORDER BY i.InvoiceDate</pre>
+            <div class="result-box">InvoiceID  InvoiceNumber  InvoiceDate  Inv_Status  ...  JobId  Segment  IR_isActive  IR_Status
+239616     26704183       2026-05-27   11          ...  83970  I1       1            11       (x16 rows)
+239617     26704184       2026-05-27   11          ...  83970  I1       1            11       (x16 rows)
+243117     26704927       2026-06-16   11          ...  84462  I1       1            11       (x1 row)
+243118     26704928       2026-06-16   11          ...  84462  I1       1            11       (x1 row)</div>
+            <p>
+              All four invoices have <code>InvStatus = 11</code> and <code>IR_isActive = 1</code> — both pass the SP filters.
+              The EBS invoices (26704927/26704928) are linked to <strong>HBLID 84462</strong>.
+              The missing invoices (26704183/26704184) are linked to <strong>HBLID 83970</strong>.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 3 &mdash; Check where IRevenue records actually live</div>
+          <div class="step-body">
+            <p>
+              The SP joins <code>ir.JobId = r.HBLID</code> to match Invoice_Rate to IRevenue.
+              Checked which HBLID the revenue records are stored under.
+            </p>
+            <pre>-- IRevenue counts by HBLID
+SELECT r.HBLID, COUNT(*) AS RevenueCount
+FROM ff.IRevenue r
+WHERE r.HBLID IN (83970, 84462) AND r.isActive = 1
+GROUP BY r.HBLID
+
+-- Invoice_Rate counts by JobId
+SELECT ir.JobId, COUNT(*) AS InvRateCount
+FROM ff.Invoice_Rate ir
+WHERE ir.JobId IN (83970, 84462)
+  AND LEFT(ir.Segment, 1) = 'I' AND ir.isActive = 1
+GROUP BY ir.JobId</pre>
+            <div class="result-box">-- IRevenue
+HBLID   RevenueCount
+84462   34
+
+-- Invoice_Rate
+JobId   InvRateCount
+83970   32
+84462   34</div>
+            <p>
+              All 34 <code>IRevenue</code> records live under HBLID <strong>84462</strong> — zero under 83970.
+              But the 32 Invoice_Rate records for the main invoices use <code>JobId = 83970</code>.
+              The SP join <code>ir.JobId = r.HBLID</code> compares <strong>83970 ≠ 84462</strong> → returns NULL → invoice number never appears.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 4 &mdash; Confirm the RevenueIDs would match after correcting JobId</div>
+          <div class="step-body">
+            <p>Before applying the fix, verified that the <code>RevenueID</code> values in Invoice_Rate (pointing to 83970) actually match <code>IRevenueID</code> values in IRevenue under 84462.</p>
+            <pre>SELECT COUNT(*) AS MatchCount
+FROM ff.Invoice_Rate ir
+JOIN ff.IRevenue r ON r.IRevenueID = ir.RevenueID
+                   AND r.HBLID = 84462
+                   AND r.isActive = 1
+WHERE ir.JobId = 83970
+  AND LEFT(ir.Segment, 1) = 'I'
+  AND ir.isActive = 1</pre>
+            <div class="result-box">MatchCount
+32</div>
+            <p>All 32 records match. Updating <code>JobId</code> from 83970 to 84462 is sufficient — no other fields need changing.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Root Cause -->
+      <div class="sec">
+        <div class="sec-title">Root Cause</div>
+        <div class="alert alert-danger">
+          <strong>ff.Invoice_Rate &mdash; InvoiceIDs 239616, 239617: JobId = 83970 (should be 84462)</strong>
+          The invoices 26704183 and 26704184 were finalized with <code>Invoice_Rate.JobId = 83970</code> (the primary HBL),
+          but all <code>ff.IRevenue</code> records for this job are stored under HBLID <strong>84462</strong> (the second HBL, 7260094).
+          The SP <code>ff.Costsheet_I</code> joins <code>ir.JobId = r.HBLID</code> — since 83970 &ne; 84462,
+          the join returns NULL and the invoice numbers are silently excluded from the cost sheet output.
+        </div>
+      </div>
+
+      <!-- Solution -->
+      <div class="sec">
+        <div class="sec-title">Solution</div>
+        <p>Preview the 32 rows to be updated:</p>
+        <pre>SELECT ir.InvRateId, ir.JobId, ir.RevenueID, ir.InvoiceID, i.InvoiceNumber
+FROM ff.Invoice_Rate ir
+JOIN ff.Invoice i ON i.InvoiceID = ir.InvoiceID
+WHERE ir.JobId = 83970
+  AND LEFT(ir.Segment, 1) = 'I'
+  AND ir.isActive = 1
+  AND ir.InvoiceID IN (239616, 239617)</pre>
+        <p>Fix applied on 01 July 2026 — corrected <code>JobId</code> to match the HBLID where <code>IRevenue</code> records actually live:</p>
+        <pre>UPDATE ff.Invoice_Rate
+SET JobId = 84462
+WHERE JobId = 83970
+  AND LEFT(Segment, 1) = 'I'
+  AND isActive = 1
+  AND InvoiceID IN (239616, 239617)</pre>
+        <p>After this update, invoice numbers 26704183 and 26704184 appeared on all revenue rows in the Job Cost Sheet for job 2603498.</p>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- Tables & Objects Involved -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Tables &amp; Objects Involved</div>
+    <table>
+      <thead>
+        <tr><th>Object</th><th>Type</th><th>Role</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>ff.Invoice_Rate</td><td>Table</td><td>Links revenue records to invoices. <code>JobId</code> was set to 83970 instead of 84462 — root cause. InvRateIds: 800599&ndash;800630.</td></tr>
+        <tr><td>ff.IRevenue</td><td>Table</td><td>Revenue records for the job. All 34 records stored under HBLID 84462 (HBL 7260094).</td></tr>
+        <tr><td>ff.Invoice</td><td>Table</td><td>Invoice header. InvoiceIDs 239616 (26704183) and 239617 (26704184), dated 27-05-2026.</td></tr>
+        <tr><td>ff.BBooking_Import_HBL</td><td>Table</td><td>Provides the HBLID list for the booking. BookingID 81203 has two HBLs: 83970 and 84462.</td></tr>
+        <tr><td>ff.Costsheet_I</td><td>Stored Procedure</td><td>Powers the Job Cost Sheet report. Revenue invoice join: <code>ir.JobId = r.HBLID</code> — this is where the mismatch breaks the output.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <span>BLISS &mdash; Bug Report &nbsp;|&nbsp; TASK-30989 &nbsp;|&nbsp; Job Cost Sheet Module</span>
+    <span>01 July 2026</span>
+  </div>
+
+</body>
+</html>

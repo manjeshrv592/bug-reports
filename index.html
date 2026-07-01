@@ -85,6 +85,17 @@
         file: 'TASK-31113.html',
         summary: 'Two invoices blocked from Cheque Request page — one by TallyPosted flag set in error, another by BookingDate cutoff in SP for a 2024 booking.'
       },
+      {
+        task: '30989',
+        title: 'Invoice Numbers Not Appearing on Job Cost Sheet',
+        module: 'Job Cost Sheet',
+        branch: 'Antwerp (W)',
+        jobs: '2603498',
+        invoices: '26704183 / 26704184',
+        date: '01 Jul 2026',
+        file: 'TASK-30989.html',
+        summary: 'Revenue invoice numbers missing from cost sheet — Invoice_Rate.JobId pointed to the wrong HBLID (83970) while all IRevenue records lived under HBLID 84462. SP join ir.JobId = r.HBLID silently returned NULL.'
+      },
       // Add new reports here
     ];
 
