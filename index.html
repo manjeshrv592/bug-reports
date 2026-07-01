@@ -1,0 +1,146 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bug Reports — Blackstone BLISS</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #f4f6f9; font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #1a1a1a; }
+
+    .header { background: #1a3c6e; color: #fff; padding: 28px 36px; margin-bottom: 32px; }
+    .header h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .header p { font-size: 12px; color: #b0c4de; }
+
+    .container { max-width: 860px; margin: 0 auto; padding: 0 24px 48px; }
+
+    .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; gap: 12px; flex-wrap: wrap; }
+    .search-wrap { flex: 1; max-width: 420px; }
+    .search-wrap input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #c8d4e3;
+      border-radius: 5px;
+      font-size: 13px;
+      outline: none;
+      background: #fff;
+    }
+    .search-wrap input:focus { border-color: #1a3c6e; }
+    .count { font-size: 12px; color: #6b7a90; }
+
+    .card {
+      background: #fff;
+      border: 1px solid #dde3ed;
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin-bottom: 10px;
+      transition: box-shadow 0.15s;
+    }
+    .card:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.07); }
+    .card a { text-decoration: none; color: inherit; display: block; }
+
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+    .card-left { flex: 1; }
+    .card-date { font-size: 11px; color: #8a9bb0; white-space: nowrap; padding-top: 2px; }
+
+    .task-num { font-size: 11px; font-weight: 700; color: #1a3c6e; background: #e8edf7; padding: 2px 8px; border-radius: 10px; display: inline-block; margin-bottom: 5px; }
+    .card-title { font-size: 14px; font-weight: 600; color: #111; margin-bottom: 5px; }
+    .card-meta { font-size: 12px; color: #6b7a90; margin-bottom: 5px; }
+    .card-meta span { margin-right: 14px; }
+    .card-summary { font-size: 12px; color: #444; line-height: 1.6; }
+
+    .no-results { color: #888; font-size: 13px; display: none; padding: 20px 0; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Bug Reports &mdash; Blackstone BLISS</h1>
+    <p>Reference log of investigated and resolved issues across BLISS modules</p>
+  </div>
+
+  <div class="container">
+
+    <div class="toolbar">
+      <div class="search-wrap">
+        <input type="text" id="searchInput" placeholder="Search by task, module, job, invoice..." oninput="filter()" />
+      </div>
+      <div class="count" id="count"></div>
+    </div>
+
+    <div id="list"></div>
+    <p class="no-results" id="noResults">No matching reports found.</p>
+
+  </div>
+
+  <script>
+    const reports = [
+      {
+        task: '31113',
+        title: 'Invoice Not Appearing on Cheque Request Page',
+        module: 'Cheque Request',
+        branch: 'Rotterdam (R) / Antwerp (W)',
+        jobs: '2605924 / ANTI20240294',
+        invoices: 'TN270400263 / 26700232',
+        date: '30 Jun 2026',
+        file: 'TASK-31113.html',
+        summary: 'Two invoices blocked from Cheque Request page — one by TallyPosted flag set in error, another by BookingDate cutoff in SP for a 2024 booking.'
+      },
+      // Add new reports here
+    ];
+
+    function render(list) {
+      const el = document.getElementById('list');
+      const none = document.getElementById('noResults');
+      const count = document.getElementById('count');
+
+      el.innerHTML = '';
+
+      if (!list.length) {
+        none.style.display = 'block';
+        count.textContent = '';
+        return;
+      }
+
+      none.style.display = 'none';
+      count.textContent = list.length + ' report' + (list.length !== 1 ? 's' : '');
+
+      list.forEach(r => {
+        el.innerHTML += `
+          <div class="card">
+            <a href="${r.file}">
+              <div class="card-top">
+                <div class="card-left">
+                  <span class="task-num">TASK-${r.task}</span>
+                  <div class="card-title">${r.title}</div>
+                  <div class="card-meta">
+                    <span>&#128193; ${r.module}</span>
+                    <span>&#127758; ${r.branch}</span>
+                    <span>&#128203; ${r.jobs}</span>
+                  </div>
+                  <div class="card-summary">${r.summary}</div>
+                </div>
+                <div class="card-date">${r.date}</div>
+              </div>
+            </a>
+          </div>`;
+      });
+    }
+
+    function filter() {
+      const q = document.getElementById('searchInput').value.toLowerCase().trim();
+      if (!q) { render(reports); return; }
+      render(reports.filter(r =>
+        r.task.includes(q) ||
+        r.title.toLowerCase().includes(q) ||
+        r.module.toLowerCase().includes(q) ||
+        r.branch.toLowerCase().includes(q) ||
+        r.jobs.toLowerCase().includes(q) ||
+        r.invoices.toLowerCase().includes(q) ||
+        r.summary.toLowerCase().includes(q)
+      ));
+    }
+
+    render(reports);
+  </script>
+</body>
+</html>

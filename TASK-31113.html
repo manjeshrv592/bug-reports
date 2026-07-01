@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TASK-31113 &mdash; Cheque Request</title>
+  <style>
+    html { scroll-behavior: smooth; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 13px;
+      color: #1a1a1a;
+      background: #fff;
+      padding: 40px;
+      max-width: 940px;
+      margin: auto;
+    }
+
+    /* Header */
+    .header {
+      background: #1a3c6e;
+      color: #fff;
+      padding: 24px 28px;
+      border-radius: 6px;
+      margin-bottom: 28px;
+    }
+    .header h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .header p { font-size: 12px; color: #b0c4de; }
+
+    /* Meta */
+    .meta-box {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #f4f7fb;
+      border: 1px solid #d0dbe8;
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin-bottom: 32px;
+    }
+    .meta-box .item label {
+      font-size: 11px;
+      color: #6b7a90;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 3px;
+    }
+    .meta-box .item span { font-weight: 600; color: #1a1a1a; }
+
+    /* Issue block */
+    .issue-block {
+      border: 1px solid #d0dbe8;
+      border-radius: 8px;
+      margin-bottom: 36px;
+      overflow: hidden;
+    }
+    .issue-header {
+      background: #1a3c6e;
+      color: #fff;
+      padding: 14px 20px;
+    }
+    .issue-header h2 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .issue-header p { font-size: 12px; color: #b0c4de; }
+    .issue-body { padding: 20px; }
+
+    /* Section inside issue */
+    .sec { margin-bottom: 22px; }
+    .sec-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1a3c6e;
+      border-left: 4px solid #1a3c6e;
+      padding-left: 10px;
+      margin-bottom: 12px;
+    }
+    .sec p { line-height: 1.7; color: #333; margin-bottom: 8px; }
+
+    /* Step */
+    .step { border: 1px solid #e0e7ef; border-radius: 6px; margin-bottom: 14px; overflow: hidden; }
+    .step-header { background: #e8eef7; color: #1a3c6e; padding: 8px 14px; font-weight: 600; font-size: 12.5px; }
+    .step-body { padding: 14px 16px; }
+    .step-body p { margin-bottom: 8px; line-height: 1.6; color: #333; }
+
+    /* Code */
+    pre {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 14px 16px;
+      border-radius: 5px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin: 10px 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* Result */
+    .result-box {
+      background: #f0f4f0;
+      border: 1px solid #b2d0b2;
+      border-radius: 5px;
+      padding: 10px 14px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      color: #1a1a1a;
+      margin: 10px 0;
+      white-space: pre-wrap;
+    }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+    th { background: #1a3c6e; color: #fff; padding: 8px 10px; text-align: left; font-weight: 600; }
+    td { padding: 7px 10px; border-bottom: 1px solid #e0e7ef; vertical-align: top; }
+    tr:nth-child(even) td { background: #f4f7fb; }
+    .highlight-row td { background: #fdecea !important; }
+    .pass { color: #1a7a1a; font-weight: 700; }
+    .fail { color: #c0392b; font-weight: 700; }
+
+    /* Alerts */
+    .alert { border-radius: 5px; padding: 12px 16px; margin: 12px 0; font-size: 12.5px; line-height: 1.6; }
+    .alert-danger  { background: #fdecea; border-left: 4px solid #c0392b; color: #7b1e1e; }
+    .alert-warning { background: #fff8e1; border-left: 4px solid #f39c12; color: #7a5c00; }
+    .alert-info    { background: #e8f4fb; border-left: 4px solid #2980b9; color: #1a4a6e; }
+    .alert strong  { display: block; margin-bottom: 4px; }
+
+    /* Back link */
+    .back-link { display: inline-block; margin-bottom: 20px; font-size: 12px; color: #1a3c6e; text-decoration: none; }
+    .back-link:hover { text-decoration: underline; }
+
+    /* Page index */
+    .page-index { background: #f4f7fb; border: 1px solid #d0dbe8; border-radius: 6px; padding: 14px 20px; margin-bottom: 28px; }
+    .page-index p { font-size: 11px; font-weight: 700; color: #6b7a90; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .page-index ol { margin: 0; padding-left: 18px; }
+    .page-index li { margin-bottom: 4px; }
+    .page-index a { font-size: 13px; color: #1a3c6e; text-decoration: none; }
+    .page-index a:hover { text-decoration: underline; }
+
+    /* Key takeaway */
+    .takeaway { background: #f0f4ff; border-left: 4px solid #1a3c6e; border-radius: 0 5px 5px 0; padding: 11px 16px; margin-bottom: 18px; font-size: 12.5px; color: #1a1a1a; line-height: 1.6; }
+    .takeaway strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7a90; margin-bottom: 4px; }
+
+    /* Footer */
+    .footer {
+      margin-top: 36px;
+      border-top: 1px solid #d0dbe8;
+      padding-top: 14px;
+      font-size: 11px;
+      color: #888;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    @media print {
+      body { padding: 20px; }
+      .issue-block { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-link">&larr; Back to Bug Reports Index</a>
+
+  <div class="header">
+    <h1>TASK-31113 &mdash; Invoices Not Appearing on Cheque Request Page</h1>
+    <p>System: BLISS &nbsp;|&nbsp; Module: Cheque Request &nbsp;|&nbsp; SP: ff.Get_2ChequeRequest &nbsp;|&nbsp; Date: 30 June 2026</p>
+  </div>
+
+  <div class="meta-box">
+    <div class="item"><label>Task</label><span>31113</span></div>
+    <div class="item"><label>Module</label><span>Cheque Request</span></div>
+    <div class="item"><label>Date Reported</label><span>30 Jun 2026</span></div>
+    <div class="item"><label>Issues in Task</label><span>2</span></div>
+  </div>
+
+  <div class="page-index">
+    <p>Issues in this report</p>
+    <ol>
+      <li><a href="#issue-1">Invoice TN270400263 not on Cheque Request Page &mdash; Job 2605924 (Rotterdam)</a></li>
+      <li><a href="#issue-2">Invoice 26700232 not on Cheque Request Page &mdash; Job ANTI20240294 (Antwerp)</a></li>
+    </ol>
+  </div>
+
+  <!-- ===========================
+       ISSUE 1
+       =========================== -->
+  <div class="issue-block" id="issue-1">
+    <div class="issue-header">
+      <h2>Issue 1 &mdash; Invoice TN270400263 not on Cheque Request Page</h2>
+      <p>Job: 2605924 &nbsp;|&nbsp; Branch: Rotterdam (R) &nbsp;|&nbsp; ICostID: 312804</p>
+    </div>
+    <div class="issue-body">
+
+      <!-- Key Takeaway -->
+      <div class="takeaway">
+        <strong>Key Takeaway</strong>
+        If <code>TallyPosted</code> is set without <code>ChqReqSent</code> being set first, the invoice is permanently hidden from the Cheque Request page. This is an invalid state — always check both columns together when an invoice is missing.
+      </div>
+
+      <!-- Problem -->
+      <div class="sec">
+        <div class="sec-title">Problem</div>
+        <p>
+          Invoice <strong>TN270400263</strong> for Job <strong>2605924</strong> (Rotterdam) was entered on the Buy Rate page
+          but was not appearing on the Cheque Request page, so it could not be sent for payment.
+        </p>
+        <p>The Cheque Request page calls <code>ff.Get_2ChequeRequest @Branch='R'</code>. The invoice was not in the result set.</p>
+      </div>
+
+      <!-- Investigation -->
+      <div class="sec">
+        <div class="sec-title">Investigation</div>
+
+        <div class="step">
+          <div class="step-header">Step 1 &mdash; Identify which job type the invoice belongs to</div>
+          <div class="step-body">
+            <p>The SP handles multiple job types: Export, Import, Misc, CHA. Ran a union query across all tables to locate the invoice.</p>
+            <pre>SELECT 'Export' AS Type, c.VendorInvNo, j.JobNumber
+FROM ff.BB_Cost c JOIN ff.BJob j ON j.JobID = c.JobID
+WHERE j.JobNumber = '2605924'
+UNION ALL
+SELECT 'Import', ic.VendorInvNo, bi.BookingNo
+FROM ff.ICost ic JOIN ff.BBooking_Import bi ON bi.BookingId = ic.BookingID
+WHERE bi.BookingNo = '2605924'
+UNION ALL
+SELECT 'Misc', ic.VendorInvNo, mj.JobNo
+FROM ff.MJ_Cost ic JOIN ff.MiscJob mj ON mj.JobId = ic.JobID
+WHERE mj.JobNo = '2605924'
+UNION ALL
+SELECT 'CHA', ic.VendorInvNo, cj.JobNo
+FROM ff.CC_Cost ic JOIN Cha.Job_CHA cj ON cj.CJobID = ic.JobID
+WHERE cj.JobNo = '2605924'</pre>
+            <div class="result-box">Import    TN270400263    2605924</div>
+            <p>Invoice belongs to the Import section &mdash; table <code>ff.ICost</code>.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 2 &mdash; Check all SP filter conditions for this record</div>
+          <div class="step-body">
+            <p>The Import section of the SP filters on several columns. Retrieved all relevant values for this invoice.</p>
+            <pre>SELECT
+    ic.ICostID, ic.VendorInvNo, ic.isActive,
+    ic.ChqReqSent, ic.TallyPosted, ic.CRevenueID,
+    ic.PartyID, bi.Branch, bi.BookingDate
+FROM ff.ICost ic
+JOIN ff.BBooking_Import bi ON bi.BookingId = ic.BookingID
+WHERE bi.BookingNo = '2605924'
+  AND ic.VendorInvNo = 'TN270400263'</pre>
+            <div class="result-box">ICostID   VendorInvNo    isActive  ChqReqSent  TallyPosted  CRevenueID  PartyID  Branch  BookingDate
+312804    TN270400263    1         NULL        1            NULL        1288     R       2026-04-30</div>
+            <p>Checked each filter the SP applies:</p>
+            <table>
+              <thead>
+                <tr><th>Filter in SP</th><th>Required</th><th>Actual</th><th>Result</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>VendorInvNo &lt;&gt; ''</td><td>Not empty</td><td>TN270400263</td><td class="pass">Pass</td></tr>
+                <tr><td>isActive = 1</td><td>1</td><td>1</td><td class="pass">Pass</td></tr>
+                <tr><td>ChqReqSent IS NULL</td><td>NULL</td><td>NULL</td><td class="pass">Pass</td></tr>
+                <tr class="highlight-row"><td><strong>TallyPosted IS NULL</strong></td><td>NULL</td><td><strong>1</strong></td><td class="fail">FAIL &mdash; Root Cause</td></tr>
+                <tr><td>CRevenueID IS NULL</td><td>NULL</td><td>NULL</td><td class="pass">Pass</td></tr>
+                <tr><td>PartyID &gt; 0</td><td>&gt; 0</td><td>1288</td><td class="pass">Pass</td></tr>
+                <tr><td>Branch = 'R'</td><td>R</td><td>R</td><td class="pass">Pass</td></tr>
+                <tr><td>BookingDate &gt;= '2025-01-01'</td><td>After 2025</td><td>2026-04-30</td><td class="pass">Pass</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Root Cause -->
+      <div class="sec">
+        <div class="sec-title">Root Cause</div>
+        <div class="alert alert-danger">
+          <strong>ff.ICost &mdash; ICostID 312804: TallyPosted = 1</strong>
+          The SP filter <code>AND ic.TallyPosted IS NULL</code> was excluding this record.
+          The field <code>TallyPosted</code> was set to 1, but <code>ChqReqSent</code> is still NULL —
+          meaning this entry was marked as Tally-posted without ever going through the Cheque Request step.
+          This is not a valid state and was confirmed to be set by mistake.
+        </div>
+      </div>
+
+      <!-- Solution -->
+      <div class="sec">
+        <div class="sec-title">Solution</div>
+        <p>Finance team confirmed <code>TallyPosted</code> was set by mistake — the invoice had not been posted in Tally. Fix applied on 30 June 2026:</p>
+        <pre>UPDATE ff.ICost
+SET TallyPosted = NULL
+WHERE ICostID = 312804</pre>
+        <p>After this update, the invoice appeared on the Cheque Request page and was processed normally.</p>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ===========================
+       ISSUE 2
+       =========================== -->
+  <div class="issue-block" id="issue-2">
+    <div class="issue-header">
+      <h2>Issue 2 &mdash; Invoice 26700232 not on Cheque Request Page</h2>
+      <p>Job: ANTI20240294 &nbsp;|&nbsp; Branch: Antwerp (W) &nbsp;|&nbsp; BookingID: 41674 &nbsp;|&nbsp; ICostIDs: 335395, 335396</p>
+    </div>
+    <div class="issue-body">
+
+      <!-- Key Takeaway -->
+      <div class="takeaway">
+        <strong>Key Takeaway</strong>
+        The SP filters imports by <code>BookingDate</code>, not invoice date. An invoice added to an old booking will be cut off even if the invoice itself is recent. Fix: extend the SP filter to also allow records where <code>VendorInvDate &gt;= cutoff</code>.
+      </div>
+
+      <!-- Problem -->
+      <div class="sec">
+        <div class="sec-title">Problem</div>
+        <p>
+          Invoice <strong>26700232</strong> for Job <strong>ANTI20240294</strong> (Antwerp) was not appearing on the Cheque Request page.
+          The invoice had 2 cost lines (ICostID 335395 and 335396) entered recently in 2026, but the booking itself dated back to 2024.
+        </p>
+        <p>Same SP: <code>ff.Get_2ChequeRequest @Branch='W'</code>. Invoice was absent from the result set in the frontend, but when we ran the SP directly in SQL it appeared — pointing to a date filter in the SP that was context-dependent.</p>
+      </div>
+
+      <!-- Investigation -->
+      <div class="sec">
+        <div class="sec-title">Investigation</div>
+
+        <div class="step">
+          <div class="step-header">Step 1 &mdash; Confirm the invoice exists and check its ICost records</div>
+          <div class="step-body">
+            <pre>SELECT
+    ic.ICostID, ic.VendorInvNo, ic.isActive,
+    ic.ChqReqSent, ic.TallyPosted, ic.CRevenueID,
+    bi.BookingNo, bi.Branch, bi.BookingDate
+FROM ff.ICost ic
+JOIN ff.BBooking_Import bi ON bi.BookingId = ic.BookingID
+WHERE ic.VendorInvNo = '26700232'</pre>
+            <div class="result-box">ICostID  VendorInvNo  isActive  ChqReqSent  TallyPosted  CRevenueID  BookingNo      Branch  BookingDate
+335395   26700232     1         NULL        NULL         NULL        ANTI20240294   W       2024-01-02
+335396   26700232     1         NULL        NULL         NULL        ANTI20240294   W       2024-01-02</div>
+            <p>All SP filters pass except one — the <code>BookingDate</code> is <strong>2024-01-02</strong>.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 2 &mdash; Identify the date filter in the SP</div>
+          <div class="step-body">
+            <p>The Import section of <code>ff.Get_2ChequeRequest</code> contains this date cutoff:</p>
+            <pre>AND bi.BookingDate >= CASE WHEN bi.Branch = 'Y' THEN '2026-01-01' ELSE '2025-01-01' END</pre>
+            <p>
+              Branch W (Antwerp) is not 'Y', so it requires <code>BookingDate &gt;= '2025-01-01'</code>.
+              This booking's date is <strong>2024-01-02</strong>, which fails the filter even though the invoice itself was created in 2026.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 3 &mdash; Why SP showed it in SQL but not in frontend</div>
+          <div class="step-body">
+            <p>
+              During investigation we temporarily changed the SP filter cutoff to <code>'2024-01-01'</code>.
+              Running <code>EXEC ff.Get_2ChequeRequest @Branch='W'</code> in SQL did return invoice 26700232.
+              However, the frontend still did not show it — this was a <strong>browser cache issue</strong>.
+              Testing in Postman confirmed the API was returning the correct data once the date was changed.
+              After reverting the SP to <code>'2025-01-01'</code>, the invoice disappeared again — confirming the root cause.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Root Cause -->
+      <div class="sec">
+        <div class="sec-title">Root Cause</div>
+        <div class="alert alert-danger">
+          <strong>ff.BBooking_Import &mdash; BookingNo ANTI20240294: BookingDate = 2024-01-02</strong>
+          The SP filter <code>AND bi.BookingDate &gt;= '2025-01-01'</code> excludes this booking because it was created in 2024.
+          The invoice (26700232) was added to this booking in 2026, but the SP uses the booking's original date — not the invoice date — for the cutoff check.
+        </div>
+      </div>
+
+      <!-- Solution -->
+      <div class="sec">
+        <div class="sec-title">Solution</div>
+
+        <p><strong>Temporary fix applied &mdash; 30 June 2026:</strong></p>
+        <p>
+          Changed the booking's <code>BookingDate</code> to today so it passes the SP filter.
+          Must be reverted after the cheque request is processed.
+        </p>
+        <pre>-- Original value recorded before change:
+-- BookingID: 41674 | BookingNo: ANTI20240294 | BookingDate: 2024-01-02
+
+-- Applied:
+UPDATE ff.BBooking_Import
+SET BookingDate = GETDATE()
+WHERE BookingNo = 'ANTI20240294'
+
+-- REVERT after cheque request is processed:
+UPDATE ff.BBooking_Import
+SET BookingDate = '2024-01-02'
+WHERE BookingNo = 'ANTI20240294'</pre>
+
+        <div class="alert alert-warning">
+          <strong>Revert required</strong>
+          Once the cheque request for ANTI20240294 is sent and processed, run the revert query above to restore the original BookingDate.
+        </div>
+
+        <p style="margin-top: 16px;"><strong>Permanent fix (pending &mdash; needs team discussion):</strong></p>
+        <p>Update the Import section of <code>ff.Get_2ChequeRequest</code> to also allow old bookings that have recent invoices:</p>
+        <pre>-- Replace:
+AND bi.BookingDate >= CASE WHEN bi.Branch = 'Y' THEN '2026-01-01' ELSE '2025-01-01' END
+
+-- With:
+AND (
+    bi.BookingDate >= CASE WHEN bi.Branch = 'Y' THEN '2026-01-01' ELSE '2025-01-01' END
+    OR ic.VendorInvDate >= '2025-01-01'
+)</pre>
+        <div class="alert alert-info">
+          <strong>Note</strong>
+          This permanent fix should be applied by the dev team and tested in sandbox before going to production.
+          It ensures that even if a booking is old, any invoice with a date after the cutoff will still appear on the Cheque Request page.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Tables involved -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Tables &amp; Objects Involved</div>
+    <table>
+      <thead>
+        <tr><th>Object</th><th>Type</th><th>Role</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>ff.ICost</td><td>Table</td><td>Import cost entries. <code>TallyPosted</code> blocked Issue 1. ICostIDs: 312804, 335395, 335396.</td></tr>
+        <tr><td>ff.BBooking_Import</td><td>Table</td><td>Import booking header. <code>BookingDate</code> caused Issue 2 cutoff failure. BookingID: 41674.</td></tr>
+        <tr><td>ff.Get_2ChequeRequest</td><td>Stored Procedure</td><td>Powers the Cheque Request page. Import section filters: <code>TallyPosted IS NULL</code>, <code>BookingDate &gt;= cutoff</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <span>BLISS &mdash; Bug Report &nbsp;|&nbsp; TASK-31113 &nbsp;|&nbsp; Cheque Request Module</span>
+    <span>30 June 2026</span>
+  </div>
+
+</body>
+</html>
