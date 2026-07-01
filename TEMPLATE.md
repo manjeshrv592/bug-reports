@@ -229,6 +229,25 @@ Copy the full HTML below and replace every `<!-- TODO -->` placeholder.
   <!-- Copy the entire .issue-block above for each additional issue, incrementing id="issue-2" etc. -->
 
 
+  <!-- OPTIONAL: Observations — use when post-fix review reveals rows or states that look wrong but are expected/not bugs -->
+  <!--
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Observations</div>
+    <p style="color: #333; line-height: 1.7; margin-bottom: 10px;">
+      TODO: describe any remaining anomalies that are expected / not bugs. E.g. empty Vendor Inv rows for
+      charges where the vendor invoice has not yet been received.
+    </p>
+    <table>
+      <thead>
+        <tr><th><!-- TODO: col 1 --></th><th><!-- TODO: col 2 --></th><th>Reason</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><!-- TODO --></td><td><!-- TODO --></td><td><!-- TODO --></td></tr>
+      </tbody>
+    </table>
+  </div>
+  -->
+
   <!-- Tables & Objects Involved -->
   <div style="margin-bottom: 28px;">
     <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Tables &amp; Objects Involved</div>

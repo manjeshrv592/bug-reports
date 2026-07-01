@@ -145,7 +145,7 @@
 
       <div class="takeaway">
         <strong>Key Takeaway</strong>
-        When a booking has multiple HBLs, the invoice can be finalized with the wrong <code>Invoice_Rate.JobId</code>. The SP joins <code>ir.JobId = r.HBLID</code> — if these don't match, the invoice number is silently absent from the cost sheet even though the invoice exists and all status flags are valid.
+        When a booking has multiple HBLs, the invoice can be finalized with the wrong <code>Invoice_Rate.JobId</code>. The SP joins <code>ir.JobId = r.HBLID</code> — if these don't match, the invoice number is silently absent from the cost sheet. Fixing <code>JobId</code> alone is not enough: when revenue is first entered, unlinked Invoice_Rate records (<code>InvoiceID = NULL</code>) are created at the correct HBLID. If the system later creates new Invoice_Rate records at the wrong HBLID instead of updating the originals, both sets end up active after the fix — causing each revenue row to appear twice (once with an invoice, once without). The orphaned unlinked records must also be deactivated.
       </div>
 
       <!-- Problem -->
@@ -283,27 +283,157 @@ WHERE ir.JobId = 83970
       <!-- Solution -->
       <div class="sec">
         <div class="sec-title">Solution</div>
-        <p>Preview the 32 rows to be updated:</p>
-        <pre>SELECT ir.InvRateId, ir.JobId, ir.RevenueID, ir.InvoiceID, i.InvoiceNumber
+
+        <div class="step">
+          <div class="step-header">Fix 1 &mdash; Correct JobId on the mislinked Invoice_Rate records (01 Jul 2026)</div>
+          <div class="step-body">
+            <p>Preview the 32 rows to be updated:</p>
+            <pre>SELECT ir.InvRateId, ir.JobId, ir.RevenueID, ir.InvoiceID, i.InvoiceNumber
 FROM ff.Invoice_Rate ir
 JOIN ff.Invoice i ON i.InvoiceID = ir.InvoiceID
 WHERE ir.JobId = 83970
   AND LEFT(ir.Segment, 1) = 'I'
   AND ir.isActive = 1
   AND ir.InvoiceID IN (239616, 239617)</pre>
-        <p>Fix applied on 01 July 2026 — corrected <code>JobId</code> to match the HBLID where <code>IRevenue</code> records actually live:</p>
-        <pre>UPDATE ff.Invoice_Rate
+            <pre>UPDATE ff.Invoice_Rate
 SET JobId = 84462
 WHERE JobId = 83970
   AND LEFT(Segment, 1) = 'I'
   AND isActive = 1
   AND InvoiceID IN (239616, 239617)</pre>
-        <p>After this update, invoice numbers 26704183 and 26704184 appeared on all revenue rows in the Job Cost Sheet for job 2603498.</p>
+            <div class="result-box">(32 rows affected)</div>
+            <p>
+              After this fix, invoice numbers appeared in the cost sheet — but revenue rows were now duplicated
+              (66 rows instead of 34, total doubled from ~5986 to ~11689 EUR). Each charge appeared twice:
+              once with an invoice number, once with an empty cell.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 5 &mdash; Diagnose row duplication after Fix 1</div>
+          <div class="step-body">
+            <p>
+              The original 34 Invoice_Rate records for <code>JobId = 84462</code> included 32 unlinked records
+              (<code>InvoiceID = NULL</code>) created when revenue was first entered. Instead of updating these
+              when the invoices were raised, the system created 32 new records at <code>JobId = 83970</code>.
+              After Fix 1, both sets were active under <code>JobId = 84462</code>, so the SP join returned
+              two rows per revenue line.
+            </p>
+            <p>Verified the count of orphaned unlinked duplicates:</p>
+            <pre>SELECT COUNT(*) AS UnlinkedDuplicates
+FROM ff.Invoice_Rate
+WHERE JobId = 84462
+  AND LEFT(Segment, 1) = 'I'
+  AND isActive = 1
+  AND InvoiceID IS NULL
+  AND RevenueID IN (
+      SELECT RevenueID FROM ff.Invoice_Rate
+      WHERE JobId = 84462
+        AND LEFT(Segment, 1) = 'I'
+        AND isActive = 1
+        AND InvoiceID IN (239616, 239617)
+  )</pre>
+            <div class="result-box">UnlinkedDuplicates
+32</div>
+            <p>Exactly 32 orphaned records — one per revenue line, all with <code>InvoiceID = NULL</code>. These are the original unlinked rate records that should have been superseded when the invoice was created.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Fix 2 &mdash; Deactivate the orphaned unlinked records (01 Jul 2026)</div>
+          <div class="step-body">
+            <pre>UPDATE ff.Invoice_Rate
+SET isActive = 0
+WHERE JobId = 84462
+  AND LEFT(Segment, 1) = 'I'
+  AND isActive = 1
+  AND InvoiceID IS NULL
+  AND RevenueID IN (
+      SELECT RevenueID FROM ff.Invoice_Rate
+      WHERE JobId = 84462
+        AND LEFT(Segment, 1) = 'I'
+        AND isActive = 1
+        AND InvoiceID IN (239616, 239617)
+  )</pre>
+            <div class="result-box">(32 rows affected)</div>
+            <p>
+              After Fix 2, all 34 revenue rows appear exactly once on the cost sheet,
+              each with its correct invoice number. Revenue total returned to the expected value.
+              The <code>InvoiceID IS NULL</code> filter ensures EBS records (InvoiceIDs 243117/243118)
+              are not touched.
+            </p>
+          </div>
+        </div>
+
+        <div class="alert alert-info">
+          <strong>To revert both fixes — order is critical</strong>
+          Two queries are required and must be run in this exact order. Step 1 must run before Step 2
+          because Step 1's subquery identifies the orphaned records by matching their <code>RevenueID</code>
+          against the linked records (<code>InvoiceID IN (239616, 239617)</code>) that are still at
+          <code>JobId = 84462</code>. If Step 2 runs first, those linked records move back to
+          <code>JobId = 83970</code> and Step 1's subquery returns nothing — the orphaned records
+          remain deactivated and the revert is incomplete.
+          <pre style="margin-top: 10px;">-- Step 1 FIRST: re-activate the 32 deactivated unlinked records
+-- (must run before Step 2 — subquery relies on linked records still being at JobId=84462)
+UPDATE ff.Invoice_Rate
+SET isActive = 1
+WHERE JobId = 84462
+  AND LEFT(Segment, 1) = 'I'
+  AND isActive = 0
+  AND InvoiceID IS NULL
+  AND RevenueID IN (
+      SELECT RevenueID FROM ff.Invoice_Rate
+      WHERE JobId = 84462
+        AND LEFT(Segment, 1) = 'I'
+        AND isActive = 1
+        AND InvoiceID IN (239616, 239617)
+  )
+-- Expected: 32 rows affected
+
+-- Step 2 AFTER: revert JobId back to 83970
+UPDATE ff.Invoice_Rate
+SET JobId = 83970
+WHERE JobId = 84462
+  AND LEFT(Segment, 1) = 'I'
+  AND isActive = 1
+  AND InvoiceID IN (239616, 239617)
+-- Expected: 32 rows affected</pre>
+        </div>
       </div>
 
     </div>
   </div>
 
+
+  <!-- Observations -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Observations</div>
+    <p style="color: #333; line-height: 1.7; margin-bottom: 10px;">
+      After both fixes, the cost sheet for job 2603498 shows two cost rows with empty <strong>Vendor Inv</strong> cells.
+      These are unrelated to this investigation — they are cost entries where the vendor invoice has not yet been received and entered in the system.
+      The cost sheet correctly shows a blank <em>Vendor Inv</em> for any charge not yet linked to a vendor invoice.
+    </p>
+    <table>
+      <thead>
+        <tr><th>Charge</th><th>Party</th><th>Amount</th><th>Reason</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Demurrage Charges</td>
+          <td>Hapag-Lloyd Belgium Nv</td>
+          <td>EUR 95.00</td>
+          <td>Demurrage is invoiced separately from the standard freight invoices (2204581451 / 2204581452). The vendor invoice has not been received and entered yet.</td>
+        </tr>
+        <tr>
+          <td>Customs Clearance Charges</td>
+          <td>My Customs B.V.</td>
+          <td>EUR 76.00</td>
+          <td>Two separate customs clearance charge lines exist — the first is linked to invoice 202605407/01; this second line is awaiting a separate or supplementary invoice from My Customs B.V.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
   <!-- Tables & Objects Involved -->
   <div style="margin-bottom: 28px;">
