@@ -96,6 +96,17 @@
         file: 'TASK-30989.html',
         summary: 'Revenue invoice numbers missing from cost sheet — Invoice_Rate.JobId pointed to the wrong HBLID (83970) while all IRevenue records lived under HBLID 84462. SP join ir.JobId = r.HBLID silently returned NULL.'
       },
+      {
+        task: '31210',
+        title: 'Invoices Not Appearing on Purchase Posting Approval Page',
+        module: 'Purchase Posting Approval',
+        branch: 'Mumbai (M)',
+        jobs: '2604421 / 2604777 / 2604789',
+        invoices: 'VINVM270403 / VINVM270411 / VINVM270408',
+        date: '06 Jul 2026',
+        file: 'TASK-31210.html',
+        summary: 'Three invoices missing from Purchase Posting Approval — cheque requests sent 21 Apr 2026 aged out of the SP\'s rolling 2-month ChqReqSent window while pending approval. Re-dating ChqReqSent restores them; permanent SP fix pending.'
+      },
       // Add new reports here
     ];
 

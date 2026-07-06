@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TASK-31210 &mdash; Purchase Posting Approval</title>
+  <style>
+    html { scroll-behavior: smooth; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 13px;
+      color: #1a1a1a;
+      background: #fff;
+      padding: 40px;
+      max-width: 940px;
+      margin: auto;
+    }
+
+    .header { background: #1a3c6e; color: #fff; padding: 24px 28px; border-radius: 6px; margin-bottom: 28px; }
+    .header h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .header p { font-size: 12px; color: #b0c4de; }
+
+    .meta-box {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #f4f7fb;
+      border: 1px solid #d0dbe8;
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin-bottom: 32px;
+    }
+    .meta-box .item label { font-size: 11px; color: #6b7a90; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px; }
+    .meta-box .item span { font-weight: 600; color: #1a1a1a; }
+
+    .page-index { background: #f4f7fb; border: 1px solid #d0dbe8; border-radius: 6px; padding: 14px 20px; margin-bottom: 28px; }
+    .page-index p { font-size: 11px; font-weight: 700; color: #6b7a90; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .page-index ol { margin: 0; padding-left: 18px; }
+    .page-index li { margin-bottom: 4px; }
+    .page-index a { font-size: 13px; color: #1a3c6e; text-decoration: none; }
+    .page-index a:hover { text-decoration: underline; }
+
+    .issue-block { border: 1px solid #d0dbe8; border-radius: 8px; margin-bottom: 36px; overflow: hidden; }
+    .issue-header { background: #1a3c6e; color: #fff; padding: 14px 20px; }
+    .issue-header h2 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .issue-header p { font-size: 12px; color: #b0c4de; }
+    .issue-body { padding: 20px; }
+
+    .takeaway { background: #f0f4ff; border-left: 4px solid #1a3c6e; border-radius: 0 5px 5px 0; padding: 11px 16px; margin-bottom: 18px; font-size: 12.5px; color: #1a1a1a; line-height: 1.6; }
+    .takeaway strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7a90; margin-bottom: 4px; }
+
+    .sec { margin-bottom: 22px; }
+    .sec-title { font-size: 13px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px; }
+    .sec p { line-height: 1.7; color: #333; margin-bottom: 8px; }
+
+    .step { border: 1px solid #e0e7ef; border-radius: 6px; margin-bottom: 14px; overflow: hidden; }
+    .step-header { background: #e8eef7; color: #1a3c6e; padding: 8px 14px; font-weight: 600; font-size: 12.5px; }
+    .step-body { padding: 14px 16px; }
+    .step-body p { margin-bottom: 8px; line-height: 1.6; color: #333; }
+
+    pre {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 14px 16px;
+      border-radius: 5px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin: 10px 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .result-box {
+      background: #f0f4f0;
+      border: 1px solid #b2d0b2;
+      border-radius: 5px;
+      padding: 10px 14px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      color: #1a1a1a;
+      margin: 10px 0;
+      white-space: pre-wrap;
+    }
+
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+    th { background: #1a3c6e; color: #fff; padding: 8px 10px; text-align: left; font-weight: 600; }
+    td { padding: 7px 10px; border-bottom: 1px solid #e0e7ef; vertical-align: top; }
+    tr:nth-child(even) td { background: #f4f7fb; }
+    .highlight-row td { background: #fdecea !important; }
+    .pass { color: #1a7a1a; font-weight: 700; }
+    .fail { color: #c0392b; font-weight: 700; }
+
+    .alert { border-radius: 5px; padding: 12px 16px; margin: 12px 0; font-size: 12.5px; line-height: 1.6; }
+    .alert-danger  { background: #fdecea; border-left: 4px solid #c0392b; color: #7b1e1e; }
+    .alert-warning { background: #fff8e1; border-left: 4px solid #f39c12; color: #7a5c00; }
+    .alert-info    { background: #e8f4fb; border-left: 4px solid #2980b9; color: #1a4a6e; }
+    .alert strong  { display: block; margin-bottom: 4px; }
+
+    .back-link { display: inline-block; margin-bottom: 20px; font-size: 12px; color: #1a3c6e; text-decoration: none; }
+    .back-link:hover { text-decoration: underline; }
+
+    .footer { margin-top: 36px; border-top: 1px solid #d0dbe8; padding-top: 14px; font-size: 11px; color: #888; display: flex; justify-content: space-between; }
+
+    @media print {
+      body { padding: 20px; }
+      .issue-block { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-link">&larr; Back to Bug Reports Index</a>
+
+  <div class="header">
+    <h1>TASK-31210 &mdash; Invoices Not Appearing on Purchase Posting Approval Page</h1>
+    <p>System: BLISS &nbsp;|&nbsp; Module: Purchase Posting Approval &nbsp;|&nbsp; SP: ff.Get_2ChequeRequest_Approve &nbsp;|&nbsp; Date: 06 July 2026</p>
+  </div>
+
+  <div class="meta-box">
+    <div class="item"><label>Task</label><span>31210</span></div>
+    <div class="item"><label>Module</label><span>Purchase Posting Approval</span></div>
+    <div class="item"><label>Date Reported</label><span>06 Jul 2026</span></div>
+    <div class="item"><label>Issues in Task</label><span>1</span></div>
+  </div>
+
+  <div class="page-index">
+    <p>Issues in this report</p>
+    <ol>
+      <li><a href="#issue-1">Invoices 2604421 / 2604777 / 2604789 not on Purchase Posting Approval page</a></li>
+    </ol>
+  </div>
+
+
+  <!-- ===========================
+       ISSUE 1
+       =========================== -->
+  <div class="issue-block" id="issue-1">
+    <div class="issue-header">
+      <h2>Issue 1 &mdash; Invoices 2604421 / 2604777 / 2604789 not on Purchase Posting Approval page</h2>
+      <p>Jobs: 2604421 / 2604777 / 2604789 &nbsp;|&nbsp; Page: Purchase Posting Approval</p>
+    </div>
+    <div class="issue-body">
+
+      <!-- Key Takeaway -->
+      <div class="takeaway">
+        <strong>Key Takeaway</strong>
+        The Purchase Posting Approval page only shows cheque requests sent within the <strong>last 2 months</strong>
+        (<code>ChqReqSent &gt;= DATEADD(MONTH, -2, GETDATE())</code>). A request that sits unapproved for more than
+        2 months silently disappears from the approval screen. Also: the branch in a captured API request is the
+        logged-in user's branch, not necessarily the branch the missing jobs belong to &mdash; always verify which
+        branch the jobs actually belong to before filtering.
+      </div>
+
+      <!-- Problem -->
+      <div class="sec">
+        <div class="sec-title">Problem</div>
+        <p>
+          Bug report received: <em>&ldquo;Purchase Posting not showing Invoice Number 2604421, 2604777 &amp; 2604789.&rdquo;</em>
+          On the Purchase Posting Approval page, the table of pending invoices did not contain these three entries.
+        </p>
+        <p>
+          The page calls the API endpoint <code>ChequeRequest/Get_2ChequeRequest_Approve</code>. A request captured
+          during triage (<code>Branch=T&amp;DCase=0&amp;VendorID=0</code>) returned 200 OK with a populated result set,
+          but the three invoices were not in it.
+        </p>
+      </div>
+
+      <!-- Investigation -->
+      <div class="sec">
+        <div class="sec-title">Investigation</div>
+
+        <div class="step">
+          <div class="step-header">Step 1 &mdash; Identify the stored procedure and its filters</div>
+          <div class="step-body">
+            <p>
+              From the backend controller <code>BSSApi\Controllers\FIN_ChequeRequestController.cs</code>, the endpoint
+              calls SP <code>ff.Get_2ChequeRequest_Approve</code>, passing the URL's <code>Branch</code> value as
+              <code>@BranchList</code> (comma-separated list) plus <code>@DCase</code> and <code>@VendorID</code>.
+            </p>
+            <p>
+              With <code>DCase=0</code> and <code>VendorID=0</code> the date window is wide open and there is no vendor
+              filter. The job numbers match the Export pattern, so the relevant SP block reads <code>ff.BB_Cost</code>
+              with these conditions:
+            </p>
+            <pre>where isNull(c.VendorInvNo,'')&lt;&gt;''
+  and isNull(c.TallyPosted,0)=0
+  and c.JobID&gt;0
+  and isNull(c.ChqReqBy,0)&lt;&gt;0
+  and c.DueDate between @D1 and @D2
+  and c.isActive=1
+  and c.ChqReqSent &gt;= DATEADD(MONTH, -2, GETDATE())</pre>
+            <p>
+              Branch is applied via <code>inner join @tblBranch tb on tb.Branch = bo.EdiCode</code>, where
+              <code>bo</code> comes from <code>BBooking.BilledBy &rarr; masterCom.OrganizationUnit</code> &mdash;
+              i.e. the <strong>billing branch of the job's booking</strong>, not the branch in the URL.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 2 &mdash; Check every SP filter on the cost rows of the three jobs</div>
+          <div class="step-body">
+            <pre>SELECT j.JobNumber, c.CostID, c.JobID, c.PartyID,
+       c.VendorInvNo, c.PurEntryNo, c.DueDate,
+       c.TallyPosted, c.isActive, c.ChqReqBy, c.ChqReqSent
+FROM ff.BJob j
+JOIN ff.BB_Cost c ON c.JobID = j.JobID
+WHERE j.JobNumber IN ('2604421', '2604777', '2604789')
+ORDER BY j.JobNumber, c.CostID;</pre>
+            <p>
+              30 rows returned. Each job has invoices from three vendors. Two vendors' invoices already have
+              <code>TallyPosted = 1</code> (correctly excluded &mdash; already posted). One pending row per job remained,
+              matching exactly the &ldquo;invoice numbers&rdquo; from the bug report (the vendor invoice number equals
+              the job number):
+            </p>
+            <div class="result-box">JobNumber  CostID   JobID  PartyID  VendorInvNo  PurEntryNo    DueDate     TallyPosted  isActive  ChqReqBy  ChqReqSent
+2604421    361963   78699  38725    2604421      VINVM270403   2026-06-30  NULL         1         3879      2026-04-21
+2604777    364537   78959  38725    2604777      VINVM270411   2026-06-30  NULL         1         3879      2026-04-21
+2604789    364527   78966  38725    2604789      VINVM270408   2026-06-30  NULL         1         3879      2026-04-21</div>
+            <p>Filter check for these three pending rows (run date 06 Jul 2026, so the 2-month cutoff = 2026-05-06):</p>
+            <table>
+              <thead>
+                <tr><th>Filter in SP</th><th>Required</th><th>Actual</th><th>Result</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>VendorInvNo &lt;&gt; ''</td><td>Not empty</td><td>Filled (= job number)</td><td class="pass">Pass</td></tr>
+                <tr><td>isNull(TallyPosted,0) = 0</td><td>NULL / 0</td><td>NULL</td><td class="pass">Pass</td></tr>
+                <tr><td>isNull(ChqReqBy,0) &lt;&gt; 0</td><td>Set</td><td>3879</td><td class="pass">Pass</td></tr>
+                <tr><td>isActive = 1</td><td>1</td><td>1</td><td class="pass">Pass</td></tr>
+                <tr><td>DueDate between @D1 and @D2</td><td>Any (DCase=0)</td><td>2026-06-30</td><td class="pass">Pass</td></tr>
+                <tr class="highlight-row"><td><strong>ChqReqSent &gt;= DATEADD(MONTH,-2,GETDATE())</strong></td><td>&gt;= 2026-05-06</td><td><strong>2026-04-21</strong></td><td class="fail">FAIL &mdash; Root Cause</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 3 &mdash; Verify which branch the jobs actually belong to</div>
+          <div class="step-body">
+            <p>
+              The <code>PurEntryNo</code> values start with <code>VINVM</code>, while the captured API response
+              (Branch=T) contained only <code>VINVT</code> entries &mdash; suggesting the jobs belong to another branch.
+              Checked the full branch chain the SP uses, without assuming anything:
+            </p>
+            <pre>SELECT j.JobNumber, j.JobID,
+       j.Branch AS JobBranch,
+       bd.BookingID,
+       bk.BilledBy,
+       bo.EdiCode AS BilledByEdiCode
+FROM ff.BJob j
+LEFT JOIN ff.BJob_Detail bd ON bd.JobID = j.JobID
+LEFT JOIN ff.BBooking bk    ON bk.BookingID = bd.BookingID
+LEFT JOIN masterCom.OrganizationUnit bo ON bo.OuId = bk.BilledBy
+WHERE j.JobNumber IN ('2604421', '2604777', '2604789')
+ORDER BY j.JobNumber, bd.BookingID;</pre>
+            <div class="result-box">JobNumber  JobID  JobBranch  BookingID  BilledBy  BilledByEdiCode
+2604421    78699  M          84677      19        M
+2604777    78959  M          84961      19        M
+2604789    78966  M          84968      19        M</div>
+            <p>
+              All three jobs belong to <strong>branch M (Mumbai)</strong> end to end &mdash; job branch, booking billing
+              branch, everything. <code>ff.Branch</code> confirms M = Mumbai, T = Tuticorin. Each job has exactly one
+              booking, so the SP's <code>TOP 1</code> booking lookup is not a factor. The captured
+              <code>Branch=T</code> request was simply from a Tuticorin-branch login and could never contain Mumbai
+              jobs &mdash; a red herring. The real complaint is about the Mumbai view.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 4 &mdash; Run the SP for branch M to confirm the date filter is the only blocker</div>
+          <div class="step-body">
+            <pre>EXEC ff.Get_2ChequeRequest_Approve @BranchList = 'M', @DCase = 0, @VendorID = 0;</pre>
+            <p>Result: 40+ branch-M rows returned, but jobs 2604421 / 2604777 / 2604789 were absent. Crucially,
+              <strong>other invoices from the same vendor (PartyID 38725)</strong> did appear (e.g. jobs 2605761,
+              2606248, 2606249) &mdash; their cheque requests were sent more recently. This rules out the branch join,
+              the vendor, and every other filter: the <code>ChqReqSent</code> 2-month cutoff is the sole cause.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Root Cause -->
+      <div class="sec">
+        <div class="sec-title">Root Cause</div>
+        <div class="alert alert-danger">
+          <strong>ff.BB_Cost &mdash; CostIDs 361963, 364537, 364527: ChqReqSent = 2026-04-21, older than the SP's rolling 2-month window</strong>
+          The SP filter <code>AND c.ChqReqSent &gt;= DATEADD(MONTH, -2, GETDATE())</code> only shows cheque requests
+          sent within the last 2 months. These three requests were sent on 2026-04-21 and were still awaiting
+          approval when the window moved past them (cutoff on 06 Jul 2026 = 2026-05-06). They aged out of the
+          Purchase Posting Approval page while pending &mdash; 15 days too old &mdash; and vanished for all branches.
+        </div>
+      </div>
+
+      <!-- Solution -->
+      <div class="sec">
+        <div class="sec-title">Solution</div>
+
+        <p><strong>Fix verified &mdash; 06 July 2026:</strong></p>
+        <p>
+          Re-dated <code>ChqReqSent</code> to the current date on the three pending cost rows so they re-enter the
+          SP's 2-month window. Original values recorded first via a preview SELECT.
+        </p>
+        <pre>-- Preview (returned exactly 3 rows; original ChqReqSent = 2026-04-21 on all):
+SELECT CostID, JobID, VendorInvNo, PurEntryNo, PartyID,
+       ChqReqSent, ChqReqBy, TallyPosted, isActive
+FROM ff.BB_Cost
+WHERE CostID IN (361963, 364537, 364527);
+
+-- Fix applied (3 rows affected):
+UPDATE ff.BB_Cost
+SET ChqReqSent = GETDATE()
+WHERE CostID IN (361963, 364537, 364527)
+  AND ISNULL(TallyPosted, 0) = 0;   -- safety: never touch a posted row
+
+-- REVERT (restores original state):
+UPDATE ff.BB_Cost
+SET ChqReqSent = '2026-04-21'
+WHERE CostID IN (361963, 364537, 364527);</pre>
+        <p>
+          After the update, all three invoices appeared in the SP output for <code>@BranchList='M'</code> and on the
+          Purchase Posting Approval page in the frontend.
+        </p>
+
+        <div class="alert alert-warning">
+          <strong>Fix was reverted after verification &mdash; database is back in its original state</strong>
+          The fix was applied, verified in the frontend on 06 July 2026, and then reverted using the revert query
+          above. The three invoices are therefore still hidden. To surface them for approval, re-run the fix
+          UPDATE (expected: 3 rows affected). Note that re-dating <code>ChqReqSent</code> rewrites when the cheque
+          request was nominally sent &mdash; inform Finance before applying.
+        </div>
+
+        <p style="margin-top: 16px;"><strong>Permanent fix (pending &mdash; needs team discussion):</strong></p>
+        <p>
+          The rolling 2-month window on <code>ChqReqSent</code> exists in the Export, Import, Misc and Transport
+          sections of <code>ff.Get_2ChequeRequest_Approve</code> (the CHA section uses a fixed
+          <code>JobDate &gt;= '2025-01-01'</code> instead, per Task 29936). Any entry pending approval for more than
+          2 months disappears. Options to discuss with the dev/finance team:
+        </p>
+        <pre>-- Option A: widen the window (e.g. 6 months)
+and c.ChqReqSent >= DATEADD(MONTH, -6, GETDATE())
+
+-- Option B: fixed cutoff date, matching the CHA section's approach
+and c.ChqReqSent >= '2025-01-01'</pre>
+        <div class="alert alert-info">
+          <strong>Note</strong>
+          Any permanent change must be applied consistently to all four affected sections of the SP and tested in
+          sandbox first. The window presumably exists to keep the approval list short, so the trade-off between
+          window size and list length is a business decision.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- Recurrence Risk -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Recurrence Risk</div>
+    <table>
+      <thead>
+        <tr><th>Issue</th><th>Risk</th><th>Will It Recur?</th><th>Action Required Until Permanent Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Cheque requests aging out of the rolling 2-month <code>ChqReqSent</code> window</td>
+          <td style="color: #c0392b; font-weight: 700;">High</td>
+          <td>
+            Yes &mdash; systematically. Every cheque request that is not approved within 2 months of being sent
+            will silently drop off the Purchase Posting Approval page. The window moves daily, so entries keep
+            aging out one by one. Affects Export, Import, Misc and Transport sections of the SP.
+          </td>
+          <td>
+            When an invoice is reported missing from Purchase Posting Approval: (1) confirm which branch the job
+            belongs to via <code>ff.BJob.Branch</code> / booking <code>BilledBy</code> &mdash; do not trust the branch
+            in a captured request URL; (2) check <code>ChqReqSent</code> on the cost row &mdash; if it is older than
+            2 months and <code>TallyPosted</code> is still NULL, re-date it to <code>GETDATE()</code> (record the
+            original value first for revert). Permanent SP fix pending.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Observations -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Observations</div>
+    <p style="color: #333; line-height: 1.7; margin-bottom: 10px;">
+      Things that looked wrong during investigation but are expected behavior:
+    </p>
+    <table>
+      <thead>
+        <tr><th>Observation</th><th>Detail</th><th>Reason</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Other invoices of the same jobs also absent from the page</td>
+          <td>Each job has invoices from two more vendors (e.g. PurEntryNos VINVM270402/404, VINVM270412/413, VINVM270409/410)</td>
+          <td>Those rows have <code>TallyPosted = 1</code> &mdash; already posted to Tally, correctly excluded by the SP.</td>
+        </tr>
+        <tr>
+          <td>Captured API request used <code>Branch=T</code> yet the bug is real</td>
+          <td>The request in the bug report queried Tuticorin, but the jobs belong to Mumbai (M)</td>
+          <td>The frontend sends the logged-in user's branch. The person who captured the request was on a T login; the reporter views the page under branch M, where the invoices were genuinely missing due to the root cause above.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Tables & Objects Involved -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Tables &amp; Objects Involved</div>
+    <table>
+      <thead>
+        <tr><th>Object</th><th>Type</th><th>Role</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>ff.Get_2ChequeRequest_Approve</td><td>Stored Procedure</td><td>Powers the Purchase Posting Approval page. Export section filter <code>ChqReqSent &gt;= DATEADD(MONTH,-2,GETDATE())</code> caused the issue.</td></tr>
+        <tr><td>ff.BB_Cost</td><td>Table</td><td>Export cost entries. <code>ChqReqSent = 2026-04-21</code> failed the cutoff. CostIDs: 361963, 364537, 364527.</td></tr>
+        <tr><td>ff.BJob</td><td>Table</td><td>Export job header. Confirmed jobs 2604421 / 2604777 / 2604789 belong to branch M (JobIDs 78699, 78959, 78966).</td></tr>
+        <tr><td>ff.BJob_Detail / ff.BBooking</td><td>Tables</td><td>Job&rarr;booking chain; <code>BBooking.BilledBy</code> determines the branch the SP filters on.</td></tr>
+        <tr><td>masterCom.OrganizationUnit</td><td>Table</td><td>Resolves <code>BilledBy</code> (OuId 19) to branch code via <code>EdiCode</code> = 'M'.</td></tr>
+        <tr><td>ff.Branch</td><td>Table</td><td>Branch master &mdash; confirmed M = Mumbai, T = Tuticorin.</td></tr>
+        <tr><td>BSSApi\Controllers\FIN_ChequeRequestController.cs</td><td>API Controller</td><td>Maps endpoint <code>Get_2ChequeRequest_Approve</code> to the SP; URL param <code>Branch</code> becomes <code>@BranchList</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <span>BLISS &mdash; Bug Report &nbsp;|&nbsp; TASK-31210 &nbsp;|&nbsp; Purchase Posting Approval Module</span>
+    <span>06 July 2026</span>
+  </div>
+
+</body>
+</html>
