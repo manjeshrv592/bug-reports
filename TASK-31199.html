@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TASK-31199 &mdash; Cheque Request</title>
+  <style>
+    html { scroll-behavior: smooth; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 13px;
+      color: #1a1a1a;
+      background: #fff;
+      padding: 40px;
+      max-width: 940px;
+      margin: auto;
+    }
+
+    .header { background: #1a3c6e; color: #fff; padding: 24px 28px; border-radius: 6px; margin-bottom: 28px; }
+    .header h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .header p { font-size: 12px; color: #b0c4de; }
+
+    .meta-box {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #f4f7fb;
+      border: 1px solid #d0dbe8;
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin-bottom: 32px;
+    }
+    .meta-box .item label { font-size: 11px; color: #6b7a90; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px; }
+    .meta-box .item span { font-weight: 600; color: #1a1a1a; }
+
+    .page-index { background: #f4f7fb; border: 1px solid #d0dbe8; border-radius: 6px; padding: 14px 20px; margin-bottom: 28px; }
+    .page-index p { font-size: 11px; font-weight: 700; color: #6b7a90; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .page-index ol { margin: 0; padding-left: 18px; }
+    .page-index li { margin-bottom: 4px; }
+    .page-index a { font-size: 13px; color: #1a3c6e; text-decoration: none; }
+    .page-index a:hover { text-decoration: underline; }
+
+    .issue-block { border: 1px solid #d0dbe8; border-radius: 8px; margin-bottom: 36px; overflow: hidden; }
+    .issue-header { background: #1a3c6e; color: #fff; padding: 14px 20px; }
+    .issue-header h2 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .issue-header p { font-size: 12px; color: #b0c4de; }
+    .issue-body { padding: 20px; }
+
+    .takeaway { background: #f0f4ff; border-left: 4px solid #1a3c6e; border-radius: 0 5px 5px 0; padding: 11px 16px; margin-bottom: 18px; font-size: 12.5px; color: #1a1a1a; line-height: 1.6; }
+    .takeaway strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7a90; margin-bottom: 4px; }
+
+    .sec { margin-bottom: 22px; }
+    .sec-title { font-size: 13px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px; }
+    .sec p { line-height: 1.7; color: #333; margin-bottom: 8px; }
+
+    .step { border: 1px solid #e0e7ef; border-radius: 6px; margin-bottom: 14px; overflow: hidden; }
+    .step-header { background: #e8eef7; color: #1a3c6e; padding: 8px 14px; font-weight: 600; font-size: 12.5px; }
+    .step-body { padding: 14px 16px; }
+    .step-body p { margin-bottom: 8px; line-height: 1.6; color: #333; }
+
+    pre {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 14px 16px;
+      border-radius: 5px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin: 10px 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .result-box {
+      background: #f0f4f0;
+      border: 1px solid #b2d0b2;
+      border-radius: 5px;
+      padding: 10px 14px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      color: #1a1a1a;
+      margin: 10px 0;
+      white-space: pre-wrap;
+    }
+
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+    th { background: #1a3c6e; color: #fff; padding: 8px 10px; text-align: left; font-weight: 600; }
+    td { padding: 7px 10px; border-bottom: 1px solid #e0e7ef; vertical-align: top; }
+    tr:nth-child(even) td { background: #f4f7fb; }
+    .highlight-row td { background: #fdecea !important; }
+    .pass { color: #1a7a1a; font-weight: 700; }
+    .fail { color: #c0392b; font-weight: 700; }
+
+    .alert { border-radius: 5px; padding: 12px 16px; margin: 12px 0; font-size: 12.5px; line-height: 1.6; }
+    .alert-danger  { background: #fdecea; border-left: 4px solid #c0392b; color: #7b1e1e; }
+    .alert-warning { background: #fff8e1; border-left: 4px solid #f39c12; color: #7a5c00; }
+    .alert-info    { background: #e8f4fb; border-left: 4px solid #2980b9; color: #1a4a6e; }
+    .alert strong  { display: block; margin-bottom: 4px; }
+
+    .back-link { display: inline-block; margin-bottom: 20px; font-size: 12px; color: #1a3c6e; text-decoration: none; }
+    .back-link:hover { text-decoration: underline; }
+
+    .footer { margin-top: 36px; border-top: 1px solid #d0dbe8; padding-top: 14px; font-size: 11px; color: #888; display: flex; justify-content: space-between; }
+
+    @media print {
+      body { padding: 20px; }
+      .issue-block { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-link">&larr; Back to Bug Reports Index</a>
+
+  <div class="header">
+    <h1>TASK-31199 &mdash; Cheque Request Not Going Through After Rejection &mdash; Email Not Sent</h1>
+    <p>System: BLISS &nbsp;|&nbsp; Module: Cheque Request &nbsp;|&nbsp; Date: 08 July 2026</p>
+  </div>
+
+  <div class="meta-box">
+    <div class="item"><label>Task</label><span>31199</span></div>
+    <div class="item"><label>Module</label><span>Cheque Request</span></div>
+    <div class="item"><label>Date Reported</label><span>03 Jul 2026</span></div>
+    <div class="item"><label>Issues in Task</label><span>2</span></div>
+  </div>
+
+  <div class="page-index">
+    <p>Issues in this report</p>
+    <ol>
+      <li><a href="#issue-1">Cheque requests for Singapore saved with a broken Purchase Entry No ("ParameterErr") &mdash; missing number series</a></li>
+      <li><a href="#issue-2">Rejecting one "ParameterErr" entry silently un-sends every pending request that shares the key</a></li>
+    </ol>
+  </div>
+
+
+  <!-- ===========================
+       ISSUE 1
+       =========================== -->
+  <div class="issue-block" id="issue-1">
+    <div class="issue-header">
+      <h2>Issue 1 &mdash; Cheque Request re-send "not going through" / email not sent (Singapore)</h2>
+      <p>Job 2602711 &nbsp;|&nbsp; Branch: Singapore (S) &nbsp;|&nbsp; QA context: Job 2608785, Vendor Invoice 8506988862</p>
+    </div>
+    <div class="issue-body">
+
+      <div class="takeaway">
+        <strong>Key Takeaway</strong>
+        When a Cheque Request behaves strangely for a whole branch (not one job), check the Purchase Entry No first.
+        <code>appConfig.Get_Number</code> returns the literal string <code>ParameterErr</code> when no
+        <code>appConfig.Numbers</code> series exists for the branch, and <code>ff.Update_2ChequeRequest</code> saves it
+        without any validation. Also remember: <code>Get_Number</code> remaps login branch codes before the lookup
+        (S&rarr;SG, Y&rarr;NY, W&rarr;ANT, R&rarr;RTM, E&rarr;UKM), so the series row must exist under the
+        <em>remapped</em> code.
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Problem</div>
+        <p>
+          Ops (Singapore) booked a DN &amp; credit note and sent the cheque request on 19.03.2026. Finance rejected it,
+          and when Ops tried to re-send the cheque request through BLISS it "did not go through", blocking file closing
+          (Job 2602711). QA added that for Job 2608785 / vendor invoice 8506988862 the finance team rejected the
+          purchase posting, Ops re-sent the cheque request, but the cheque-request mail was not sent again. The
+          developer confirmed that in the data the request showed as sent to finance for all charges &mdash; yet no
+          email arrived.
+        </p>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Investigation</div>
+
+        <div class="step">
+          <div class="step-header">Step 1 &mdash; Traced the send and mail flow in code</div>
+          <div class="step-body">
+            <p>
+              The Cheque Request page (<code>BLISS &gt; bilssfinance-operation &gt; cheque-request</code>) posts to
+              <code>/ChequeRequest/Update_2ChequeRequest</code> &rarr; SP <code>ff.Update_2ChequeRequest</code>.
+              The SP generates a Purchase Entry No per vendor invoice via
+              <code>appConfig.Get_Number @Branch, '', 'VINV'</code>, stamps
+              <code>ChqReqSent / PurEntryNo</code> on the cost rows, and returns the mail body (Table1) and
+              recipients (Table2, from <code>ff.Email</code> where <code>EType='CHQREQUEST'</code>).
+              The email itself is then sent by the <em>browser</em> via <code>/mail/sendChequeRequestMail</code> &mdash;
+              a DB update can succeed while the mail silently fails. Rejection goes through
+              <code>/tallyMigration/Update_ChqReq_Reject</code> &rarr; SP <code>ff.Update_ChqReq_Reject</code>, which
+              clears <code>ChqReqBy / ChqReqSent / PurEntryNo / PurEntryDate</code> on all cost rows matching the
+              rejected <code>PurEntryNo</code>.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 2 &mdash; Checked the job data: the failing items are Import rows with a corrupted Purchase Entry No</div>
+          <div class="step-body">
+            <p>
+              The export job 2602711 turned out to belong to branch GHA and its export cheque requests were healthy
+              (proper <code>VINVGHA26xxxx</code> numbers). The failing items were the <em>Import</em> booking rows under
+              Singapore. The send audit trail showed the smoking gun:
+            </p>
+            <pre>select Typ, JobNumber, VendorInvNo, PurEntryNo, Branch, CreatedBy, Created
+from Bss_Report.ff.Cheque_Request_List
+where JobNumber in ('2602711','2608785') or VendorInvNo = '8506988862'
+order by Created desc;</pre>
+            <div class="result-box">Imp  2607794  8506988862   ParameterErr  S  ...  2026-07-08 06:12:59
+Imp  2602711  2553204170   ParameterErr  S  ...  2026-07-01 19:34:05
+Imp  2602711  2553206870   ParameterErr  S  ...  2026-07-01 19:34:05
+Imp  2602711  (5 invoices) ParameterErr  S  ...  2026-03-19 12:41:42
+Exp  2602711  ...          VINVGHA26xxxx GHA ... (export side healthy)</div>
+            <p>
+              Every Singapore import cheque request &mdash; including the original 19.03.2026 send and all re-sends &mdash;
+              was saved with <code>PurEntryNo = 'ParameterErr'</code>. (Vendor invoice 8506988862 actually belongs to
+              job 2607794, not 2608785.) The re-sends <em>did</em> run and produced mail-body rows, so the failure was
+              not in the send itself.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 3 &mdash; Read appConfig.Get_Number: "ParameterErr" means no number series configured</div>
+          <div class="step-body">
+            <p>
+              <code>appConfig.Get_Number</code> (BSS) returns the literal string <code>'Parameter Err'</code>
+              (spaces stripped &rarr; <code>ParameterErr</code>) when no row exists in <code>appConfig.Numbers</code>
+              for the branch + NType + Segment. <code>ff.Update_2ChequeRequest</code> saves this value straight into
+              <code>PurEntryNo</code> with no validation. Critically, the BSS version of the SP also
+              <strong>remaps the login branch code before the lookup</strong>:
+            </p>
+            <pre>if @Branch='W' set @Branch='ANT'
+if @Branch='R' set @Branch='RTM'
+if @Branch in ('E','LON') set @Branch='UKM'
+if @Branch='S' set @Branch='SG'
+if @Branch='Y' set @Branch='NY'</pre>
+            <p>
+              So Singapore requests look up <code>BranchId='SG'</code> &mdash; a fix inserted under
+              <code>BranchId='S'</code> would do nothing.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 4 &mdash; Confirmed no VINV series exists for the remapped codes</div>
+          <div class="step-body">
+            <pre>select * from appConfig.Numbers where BranchId in ('SG','NY','D') and NType = 'VINV';</pre>
+            <div class="result-box">(0 rows)</div>
+            <p>
+              The full VINV listing showed active series for GHA, T, M, RTM, ANT, UKM, HAM, DAC, etc. &mdash; but nothing
+              for <code>SG</code>, <code>NY</code> or <code>D</code>. The number generator's own call log proved which
+              codes actually request VINV numbers (each call is logged twice &mdash; pre- and post-remap &mdash; hence the
+              identical pairs):
+            </p>
+            <pre>select Branch, Segment, count(*) as calls
+from ffLog.Lg_AppConfig_Number
+where NType = 'VINV'
+group by Branch, Segment
+order by calls desc;</pre>
+            <div class="result-box">W 29733 = ANT 29733   (works: ANT series exists)
+R 18894 = RTM 18894   (works: RTM series exists)
+E  9466 = UKM  9466   (works: UKM series exists)
+Y  7013 = NY   7013   (FAILS: no NY series)
+S  1219 = SG   1219   (FAILS: no SG series)
+D  1272 (not remapped) (FAILS: no D series)</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 5 &mdash; Measured the blast radius across branches</div>
+          <div class="step-body">
+            <pre>select Branch, Typ, count(*) as sends, min(Created) as first_seen, max(Created) as last_seen
+from Bss_Report.ff.Cheque_Request_List
+where PurEntryNo = 'ParameterErr'
+group by Branch, Typ order by last_seen desc;</pre>
+            <div class="result-box">S   (Imp/Misc/Exp)  2,062 sends   2023-07-21 &rarr; 2026-07-08  (this bug)
+Y   (Imp/Exp/Misc) 11,661 sends  2023-04-13 &rarr; 2026-07-02  (same defect, code NY)
+D   (Exp/Imp/Misc)  3,823 sends  2023-04-05 &rarr; 2026-05-20  (same defect, code D)
+A                     252 sends  ...        &rarr; 2024-03      (dormant)
+GHA / LFW           small        stopped Mar 2025 &mdash; fixed when their series rows were created</div>
+            <p>
+              GHA and LFW had this exact failure until <code>appConfig.Numbers</code> rows were created for them in
+              early 2025 &mdash; the same one-row fix proposed here, with precedent.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 6 &mdash; Verified the mail generation and recipients were intact</div>
+          <div class="step-body">
+            <p>
+              On every re-send the SP produced mail-body rows (proven by <code>Bss_Report.ff.Cheque_Request_List</code>
+              inserts) and the recipient lookup resolved: branch 'S' is in the SP's BizControl-routing list, the
+              bookings' controlling office is GHA (OuID 52), and <code>ff.Email</code> has an active
+              <code>CHQREQUEST</code> row for GHA. So the mail was generated and addressed to the West-Africa
+              distribution (see Observations) &mdash; the perceived "email not sent" and "request not going through" are
+              the effects of Issue 2 below: the request kept getting silently un-sent after every rejection anywhere in
+              the branch.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Root Cause</div>
+        <div class="alert alert-danger">
+          <strong>appConfig.Numbers &mdash; no VINV series for BranchId 'SG' (Singapore's remapped code)</strong>
+          <code>appConfig.Get_Number</code> remaps login branch 'S' to 'SG' and finds no
+          <code>NType='VINV'</code> series, so it returns the literal <code>ParameterErr</code>, which
+          <code>ff.Update_2ChequeRequest</code> saves as the Purchase Entry No for every Singapore cheque request
+          (2,062 occurrences since Jul 2023). Branches Y (remapped to 'NY', 11,661 occurrences) and D (not remapped,
+          3,823 occurrences) have the identical defect.
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Solution</div>
+        <p>
+          Prepared 08 Jul 2026 &mdash; to be executed and then verified in the frontend. The fix for this task is the
+          <code>SG</code> series row; NY and D are the same defect and should be applied after confirming with the
+          finance team (see the note below).
+        </p>
+
+        <pre>-- STEP A (pre-flight): confirm SG's year-window convention from its existing series
+select NType, Segment, YearCode, DateFrom, DateTo, NFormat
+from appConfig.Numbers
+where BranchId = 'SG' and isActive = 1 and getdate() between DateFrom and DateTo
+order by NType;
+-- Expect calendar-year windows (Jan-Dec), like GHA/LFW/RTM/ANT.
+-- If SG's rows are fiscal (Apr-Mar), use DateFrom '2026-04-01', DateTo '2027-03-31', YearCode '27' below instead.
+
+-- STEP B (preview): expect 0 rows
+select * from appConfig.Numbers where BranchId = 'SG' and NType = 'VINV';
+
+-- STEP C (fix, 1 row): first number issued will be VINVSG260001
+insert into appConfig.Numbers (BranchId, Segment, NType, Number, YearCode, DateFrom, DateTo, isActive, NFormat, POD)
+values ('SG', '', 'VINV', 0, '26', '2026-01-01', '2026-12-31', 1, 'TypeBranchFY9999', '');
+
+-- STEP D (verify): expect 1 row, Number = 0
+select * from appConfig.Numbers where BranchId = 'SG' and NType = 'VINV';
+
+-- REVERT (only while Number is still 0, i.e. before any number has been issued):
+-- delete from appConfig.Numbers where BranchId = 'SG' and NType = 'VINV' and Number = 0;</pre>
+
+        <p><strong>Frontend verification after the fix:</strong></p>
+        <p>
+          1) Ops (Singapore) re-sends the pending cheque requests (invoice 8506988862 / job 2607794 and the job
+          2602711 import invoices are already back in pending state, so they appear on the page).
+          2) Confirm <code>ff.ICost.PurEntryNo</code> receives a real <code>VINVSG26xxxx</code> number.
+          3) Confirm the entry appears in Purchase Posting Approval under its own entry number.
+          4) Confirm rejecting one entry no longer clears any other entry.
+        </p>
+
+        <div class="alert alert-info">
+          <strong>Related fixes for the same defect (apply after team sign-off)</strong>
+          Branch Y (code NY &mdash; calendar year): <code>insert into appConfig.Numbers (BranchId, Segment, NType, Number,
+          YearCode, DateFrom, DateTo, isActive, NFormat, POD) values ('NY', '', 'VINV', 0, '26', '2026-01-01',
+          '2026-12-31', 1, 'TypeBranchFY9999', '')</code> &mdash; verify NY's window convention first, same as Step A.
+          Branch D (India &mdash; fiscal year like M/T): <code>values ('D', '', 'VINV', 0, '27', '2026-04-01',
+          '2027-03-31', 1, 'TypeBranchFY9999', '')</code>. Y has three years of shared-key history (11,661 sends), so
+          inform finance before enabling &mdash; all its pending items currently sit under one shared key.
+        </div>
+
+        <div class="alert alert-info">
+          <strong>Permanent fixes pending (code changes for dev team)</strong>
+          1) <code>ff.Update_2ChequeRequest</code> must abort with an error when <code>Get_Number</code> returns
+          <code>ParameterErr</code> or <code>toinsert</code>, instead of persisting a garbage shared key.
+          2) <code>ff.Update_ChqReq_Reject</code> must clear rows by CostID list (it already computes
+          <code>@CostIDList</code>) instead of by bare <code>PurEntryNo</code> &mdash; see Issue 2.
+          3) Annual rollover: every series has a DateTo; when a financial year rolls over with no new row,
+          <code>Get_Number</code> returns <code>toinsert</code> (e.g. DXB's series ended 2023-12-31). A yearly seeding
+          check or auto-rollover is needed.
+          4) <code>ff.Cancel_Purchase_Posting</code> deletes its own <code>Tally_Invoice_*_Pur</code> rows on cancel,
+          leaving no audit trail &mdash; add logging.
+        </div>
+
+        <div class="alert alert-warning">
+          <strong>Cleanup after QA confirms testing is finished</strong>
+          QA's staging test row still shows as sent with the corrupted key:
+          <code>update ff.ICost set ChqReqBy=null, ChqReqSent=null, PurEntryNo=null, PurEntryDate=null
+          where iCostID=340492 and VendorInvNo='Test123'</code> (expect 1 row).
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ===========================
+       ISSUE 2
+       =========================== -->
+  <div class="issue-block" id="issue-2">
+    <div class="issue-header">
+      <h2>Issue 2 &mdash; Rejecting one "ParameterErr" entry un-sends every pending request sharing the key</h2>
+      <p>All branches without a VINV series &nbsp;|&nbsp; SP: ff.Update_ChqReq_Reject</p>
+    </div>
+    <div class="issue-body">
+
+      <div class="takeaway">
+        <strong>Key Takeaway</strong>
+        <code>ff.Update_ChqReq_Reject</code> clears cheque-request state with
+        <code>WHERE PurEntryNo = @PurEntryNo</code>. That is safe only while Purchase Entry Numbers are unique.
+        The moment a branch writes a shared value (<code>ParameterErr</code>), one rejection wipes the entire
+        branch's pending queue &mdash; and the affected users only see their requests silently vanish.
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Problem</div>
+        <p>
+          This is the mechanism behind "we re-send it and it never goes through". Ops re-sent their cheque request,
+          the data showed it as sent, and some time later it was back to not-sent without anyone rejecting
+          <em>their</em> invoice.
+        </p>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Investigation</div>
+
+        <div class="step">
+          <div class="step-header">Step 1 &mdash; Reject log shows mass wipes on every "ParameterErr" rejection</div>
+          <div class="step-body">
+            <pre>select top 50 * from Bss_Log.ffL.ChqReq_Reject_Log order by Rejected desc;</pre>
+            <div class="result-box">TransID 724  2026-07-08 06:47  PurEntryNo=ParameterErr  &rarr; cleared   4 cost rows
+TransID 723  2026-07-08 06:41  PurEntryNo=ParameterErr  &rarr; cleared  40 cost rows (incl. invoice 8506988862's row 340211)
+TransID 722  2026-07-07 11:41  PurEntryNo=ParameterErr  &rarr; cleared  13 cost rows
+TransID 721  2026-06-16 01:46  PurEntryNo=ParameterErr  &rarr; cleared 150 cost rows
+TransID 720, 703, 682, 681 ... each ParameterErr reject cleared 15-59 rows
+(normal rejects, e.g. VINVRTM265544, cleared exactly the 1-4 rows of their own invoice)</div>
+            <p>
+              Each "ParameterErr" rejection nulls <code>ChqReqBy / ChqReqSent / PurEntryNo / PurEntryDate</code> on
+              every cost row in the system that carries the shared key at that moment &mdash; across unrelated jobs and
+              vendors. Rejections of properly-numbered entries only touch their own invoice.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 2 &mdash; Timeline for the reported invoice</div>
+          <div class="step-body">
+            <p>
+              Invoice 8506988862 (job 2607794): re-sent 08 Jul 06:12 &rarr; wiped at 06:41 by a rejection of a
+              <em>different</em> invoice sharing the key (TransID 723). Job 2602711's import invoices: sent 19 Mar,
+              re-sent 29 Jun and 01 Jul &mdash; each send later found cleared again. The finance approval page
+              (<code>ff.Get_2ChequeRequest_Approve</code>) additionally groups by <code>PurEntryNo</code>, so all
+              pending Singapore items appear lumped under one "ParameterErr" entry &mdash; rejecting what looks like one
+              invoice rejects everything.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Root Cause</div>
+        <div class="alert alert-danger">
+          <strong>ff.Update_ChqReq_Reject &mdash; keys on PurEntryNo, which is not unique when number generation fails</strong>
+          The reject SP clears cheque-request state for all rows matching the rejected
+          <code>PurEntryNo</code>. Combined with Issue 1 (all Singapore requests sharing
+          <code>ParameterErr</code>), every rejection mass-wipes the branch's pending queue, creating the endless
+          send&rarr;vanish loop that was reported as "the cheque request is not going through".
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Solution</div>
+        <p>
+          No separate data fix &mdash; Issue 1's series row stops new shared keys, after which rejections become
+          precise again. Until the series rows exist for all affected branches (NY, D):
+        </p>
+        <div class="alert alert-warning">
+          <strong>Interim caution for finance</strong>
+          Do NOT reject any purchase-posting entry whose Purchase Entry No shows <code>ParameterErr</code> &mdash;
+          each such rejection un-sends every other pending request in that branch. Ask IT to fix the branch's number
+          series first, have Ops re-send, then reject the properly-numbered entry.
+        </div>
+        <div class="alert alert-info">
+          <strong>Permanent fix pending</strong>
+          Change <code>ff.Update_ChqReq_Reject</code> to clear rows by the CostID list of the rejected entry
+          (the SP already computes <code>@CostIDList</code> for its log) instead of <code>WHERE PurEntryNo=@PurEntryNo</code>.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- Recurrence Risk -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Recurrence Risk</div>
+    <table>
+      <thead>
+        <tr><th>Issue</th><th>Risk</th><th>Will It Recur?</th><th>Action Required Until Permanent Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Singapore ParameterErr entries</td>
+          <td style="color: #c0392b; font-weight: 700;">High until SG row inserted, then Low</td>
+          <td>Yes &mdash; every Singapore cheque request fails until the <code>SG</code> VINV series exists.</td>
+          <td>Apply the Issue 1 insert; verify first re-send gets a VINVSG26xxxx number.</td>
+        </tr>
+        <tr>
+          <td>Branches Y (NY) and D &mdash; same defect</td>
+          <td style="color: #c0392b; font-weight: 700;">High</td>
+          <td>Yes &mdash; actively producing ParameterErr entries (Y last seen 02 Jul 2026, D last seen 20 May 2026).</td>
+          <td>Apply the NY and D inserts after finance sign-off; Y's whole pending queue currently shares one key.</td>
+        </tr>
+        <tr>
+          <td>Mass-wipe on rejection of a shared key</td>
+          <td style="color: #c0392b; font-weight: 700;">High</td>
+          <td>Yes &mdash; any rejection of a ParameterErr entry wipes all requests sharing it, in any affected branch.</td>
+          <td>Finance must not reject ParameterErr entries; permanent fix = reject by CostID list in <code>ff.Update_ChqReq_Reject</code>.</td>
+        </tr>
+        <tr>
+          <td>Annual series window expiry ("toinsert")</td>
+          <td style="color: #f39c12; font-weight: 700;">Medium</td>
+          <td>Yes &mdash; every <code>appConfig.Numbers</code> row has a DateTo; a missed yearly rollover produces the same class of corrupted key (e.g. DXB's series ended 2023-12-31).</td>
+          <td>Seed next-year rows before each new year / financial year; dev to add validation in <code>Update_2ChequeRequest</code>.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Observations -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Observations</div>
+    <p style="color: #333; line-height: 1.7; margin-bottom: 10px;">
+      Things that looked wrong during the investigation but are expected behavior or outside this bug's scope:
+    </p>
+    <table>
+      <thead>
+        <tr><th>Observation</th><th>Detail</th><th>Reason</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Ticket said "Export / Singapore" but the export job is GHA</td>
+          <td>Job 2602711 exists twice: as a GHA export job (healthy) and as a Singapore import booking (the failing one). Vendor invoice 8506988862 belongs to job 2607794, not 2608785. Job 2607794 also exists as both an S and a Y booking.</td>
+          <td>Job/booking numbers are not unique across job types and branches; users report from their screen context. Always verify the actual branch and segment in the data.</td>
+        </tr>
+        <tr>
+          <td>Cheque request email goes to the West-Africa distribution, not Singapore finance</td>
+          <td>Mail resolves TO t.sasikumar@, CC wafops@ + ap.intl@ (ff.Email GHA row).</td>
+          <td>By design: branch 'S' is in <code>Update_2ChequeRequest</code>'s BizControl-routing list, and these bookings' controlling office is GHA. If the business wants Singapore finance included, that is a one-row <code>ff.Email</code> change &mdash; separate decision.</td>
+        </tr>
+        <tr>
+          <td>The 01 Jul re-send of job 2602711's invoices was cleared by an untraceable path</td>
+          <td>Cleared between 01 Jul and 07 Jul with no matching reject-log entry and no cost-correction record.</td>
+          <td>Most likely <code>ff.Cancel_Purchase_Posting</code>, which deletes its own <code>Tally_Invoice_*_Pur</code> rows on cancel and keeps no log &mdash; logging recommendation raised with the dev team.</td>
+        </tr>
+        <tr>
+          <td>Tally_Invoice_Detail_Pur rows exist with CostID 296846/296847 under a Bangladesh export posting</td>
+          <td>Same numeric IDs as the Singapore import cost rows.</td>
+          <td>Coincidence, not corruption: CostIDs are per-table (BB_Cost vs ICost), and Tally purchase rows are resolved per segment.</td>
+        </tr>
+        <tr>
+          <td>Dead number-series rows: single-letter Y, R, W (Number=0 since 2021/22); DXB series ended 2023-12-31</td>
+          <td>These rows are never consulted because logins are remapped (Y&rarr;NY, R&rarr;RTM, W&rarr;ANT); DXB has 7,554 logged VINV calls but no active window.</td>
+          <td>Harmless clutter today, but worth cleaning up / reseeding during the permanent fix to avoid future confusion.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Tables & Objects Involved -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Tables &amp; Objects Involved</div>
+    <table>
+      <thead>
+        <tr><th>Object</th><th>Type</th><th>Role</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>appConfig.Numbers</td><td>Table</td><td>Number series per branch/NType &mdash; the missing 'SG' VINV row is the root cause</td></tr>
+        <tr><td>appConfig.Get_Number</td><td>SP</td><td>Issues sequential numbers; remaps S&rarr;SG, Y&rarr;NY, W&rarr;ANT, R&rarr;RTM, E&rarr;UKM; returns 'ParameterErr' when no series exists</td></tr>
+        <tr><td>ff.Update_2ChequeRequest</td><td>SP</td><td>Saves the cheque request, generates PurEntryNo, returns mail body + recipients</td></tr>
+        <tr><td>ff.Update_ChqReq_Reject</td><td>SP</td><td>Rejection &mdash; clears cheque-request state by PurEntryNo (mass-wipe when key is shared)</td></tr>
+        <tr><td>ff.ICost / ff.BB_Cost</td><td>Table</td><td>Import / Export cost rows carrying ChqReqSent + PurEntryNo</td></tr>
+        <tr><td>ff.Email (EType='CHQREQUEST')</td><td>Table</td><td>Mail recipients per branch; branch 'S' routes via BizControl branch (GHA)</td></tr>
+        <tr><td>Bss_Report.ff.Cheque_Request_List</td><td>Table</td><td>Audit of every send &mdash; proved ParameterErr since 2023 and quantified affected branches</td></tr>
+        <tr><td>Bss_Log.ffL.ChqReq_Reject_Log</td><td>Table</td><td>Audit of every rejection &mdash; proved the mass wipes (150 rows in one reject)</td></tr>
+        <tr><td>ffLog.Lg_AppConfig_Number</td><td>Table</td><td>Get_Number call log &mdash; proved the branch-code remapping (S=SG, Y=NY pairs)</td></tr>
+        <tr><td>Bss_Report.ff.VendorPayment</td><td>Table</td><td>One row per send with the issued PurEntryNo</td></tr>
+        <tr><td>ff.Cancel_Purchase_Posting / CR.Correction_Cost</td><td>SP</td><td>Other paths that legitimately clear cheque-request state (checked and ruled out / noted)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <span>BLISS &mdash; Bug Report &nbsp;|&nbsp; TASK-31199 &nbsp;|&nbsp; Cheque Request</span>
+    <span>08 July 2026</span>
+  </div>
+
+</body>
+</html>

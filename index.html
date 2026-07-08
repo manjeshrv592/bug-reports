@@ -107,6 +107,17 @@
         file: 'TASK-31210.html',
         summary: 'Three invoices missing from Purchase Posting Approval — cheque requests sent 21 Apr 2026 aged out of the SP\'s rolling 2-month ChqReqSent window while pending approval. Re-dating ChqReqSent restores them; permanent SP fix pending.'
       },
+      {
+        task: '31199',
+        title: 'Cheque Request Not Going Through After Rejection — Email Not Sent',
+        module: 'Cheque Request',
+        branch: 'Singapore (S)',
+        jobs: '2602711 / 2607794 / 2608785',
+        invoices: '8506988862',
+        date: '08 Jul 2026',
+        file: 'TASK-31199.html',
+        summary: 'Singapore cheque requests saved with PurEntryNo=\'ParameterErr\' — no appConfig.Numbers VINV series for the remapped branch code SG. Shared key made every rejection mass-wipe the branch\'s pending queue (up to 150 rows per reject). Branches Y (NY) and D have the same defect. Fix: one-row series insert per branch.'
+      },
       // Add new reports here
     ];
 

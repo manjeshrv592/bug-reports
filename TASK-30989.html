@@ -416,6 +416,80 @@ WHERE JobId = 84462
         </div>
       </div>
 
+      <!-- Solution Validation (added 07 Jul 2026) -->
+      <div class="sec">
+        <div class="sec-title">Solution Validation &mdash; addendum, 07 July 2026</div>
+        <p>
+          The team raised a fair concern: <em>&ldquo;you should not change JobId.&rdquo;</em>
+          To settle it, the fix was re-validated against the full stored-procedure source of the BSS database
+          (all 4,600+ SPs/views), checking how <code>Invoice_Rate.JobId</code> is used system-wide &mdash;
+          not just in <code>ff.Costsheet_I</code>. Three findings confirm the fix is correct.
+          A full evidence dossier with verbatim SP source, the complete proof chain, and a system-wide
+          detection query is in <a href="TASK-30989-DEEPDIVE.html">TASK-30989-DEEPDIVE.html</a>.
+        </p>
+
+        <div class="step">
+          <div class="step-header">Finding 1 &mdash; For import invoices, Invoice_Rate.JobId is an HBLID by system-wide convention</div>
+          <div class="step-body">
+            <p>
+              The column is polymorphic per segment: Export rows join it to <code>ff.BBL.BLID</code>, Misc rows to
+              <code>ff.MiscJob.JobID</code>, CHA rows to <code>CHA.Job_CHA.CJobID</code>. For Import
+              (<code>Segment 'I%'</code>), every SP that reads it joins it to an HBLID:
+              <code>ir.JobId = IRevenue.HBLID</code> (<code>Costsheet_I</code>, <code>Dashboard_Import</code>,
+              <code>Get_Jobwise_Cost_Revenue_Listing</code>) and
+              <code>ir.JobId = BBooking_Import_HBL.HBLID</code> (<code>Engine_Jobwise_PnL_Live</code>,
+              <code>Get_Invoice_Correction</code>, <code>Fn_FrightRate</code>).
+              So the fix did not change a job identifier &mdash; it corrected <strong>which HBL of the same booking</strong>
+              the rate lines point to.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Finding 2 &mdash; The system's own code requires JobId to match the RevenueID's HBLID</div>
+          <div class="step-body">
+            <p>The invoice finalization SP <code>ff.Update_Invoice</code> links unlinked rate rows to a new invoice with:</p>
+            <pre>Update ff.Invoice_Rate set InvoiceId=@InvoiceIdentity ...
+from ff.Invoice_Rate u, @Invoice_Rate r
+where r.JobId=u.JobID and r.isSelect=1 and isNull(u.InvoiceID,0)=0 and u.RevenueID=r.RevenueID</pre>
+            <p>and <code>ff.Costsheet_I</code> joins with both conditions at once:</p>
+            <pre>left join ff.Invoice_Rate ir  on ir.JobId=r.HBLID and ir.RevenueID=r.IRevenueID
+                              and left(ir.Segment,1)='I' and ir.isActive = 1</pre>
+            <p>
+              Both encode the same invariant: a rate row's <code>JobId</code> must equal the <code>HBLID</code> of the
+              <code>IRevenue</code> row its <code>RevenueID</code> references. The broken rows referenced revenue at
+              HBLID 84462 while carrying JobId 83970 &mdash; a self-contradictory state. The <code>Update_Invoice</code>
+              logic also explains the orphan duplicates: because the screen's payload carried JobId 83970, the
+              <code>r.JobId=u.JobID</code> match missed the existing unlinked rows at 84462, so 32 new rows were inserted
+              instead of updating them &mdash; exactly the state found in Step 5.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Finding 3 &mdash; The correctly-created invoices on the same job already use 84462</div>
+          <div class="step-body">
+            <p>
+              The EBS invoices (26704927 / 26704928), raised through the proper flow, have
+              <code>JobId = 84462</code>. The fix made the broken rows identical in form to the rows the system
+              creates when working correctly.
+            </p>
+          </div>
+        </div>
+
+        <div class="alert alert-info">
+          <strong>Blast radius checked &mdash; nothing else is affected by the change</strong>
+          Across all SPs/views: no code joins <code>Invoice.JobId</code> (header) to <code>Invoice_Rate.JobId</code>
+          (detail), so no header/detail equality dependency exists; invoice printing (<code>ff.Rpt_Invoice</code>)
+          fetches lines by <code>ir.InvoiceId = i.InvoiceID</code> only; and <code>ff.Invoice.JobId</code> &mdash; which
+          drives invoice search and listings &mdash; was never modified. The alternative fixes would have been worse:
+          moving <code>IRevenue.HBLID</code> to 83970 would corrupt the correctly-linked EBS invoices, and leaving the
+          data as-is leaves the cost sheet permanently wrong. The genuine outstanding issue remains the upstream one
+          already noted under Recurrence Risk: the invoicing screen sends the primary HBL's ID in its payload when
+          invoicing revenue that lives on a secondary HBL.
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -489,7 +563,8 @@ WHERE JobId = 84462
         <tr><td>ff.IRevenue</td><td>Table</td><td>Revenue records for the job. All 34 records stored under HBLID 84462 (HBL 7260094).</td></tr>
         <tr><td>ff.Invoice</td><td>Table</td><td>Invoice header. InvoiceIDs 239616 (26704183) and 239617 (26704184), dated 27-05-2026.</td></tr>
         <tr><td>ff.BBooking_Import_HBL</td><td>Table</td><td>Provides the HBLID list for the booking. BookingID 81203 has two HBLs: 83970 and 84462.</td></tr>
-        <tr><td>ff.Costsheet_I</td><td>Stored Procedure</td><td>Powers the Job Cost Sheet report. Revenue invoice join: <code>ir.JobId = r.HBLID</code> — this is where the mismatch breaks the output.</td></tr>
+        <tr><td>ff.Costsheet_I</td><td>Stored Procedure</td><td>Powers the Job Cost Sheet report. Revenue invoice join: <code>ir.JobId = r.HBLID AND ir.RevenueID = r.IRevenueID</code> — this is where the mismatch breaks the output.</td></tr>
+        <tr><td>ff.Update_Invoice</td><td>Stored Procedure</td><td>Invoice finalization. Links rate rows via <code>r.JobId = u.JobID AND u.RevenueID = r.RevenueID</code> — the JobId mismatch in the screen payload is what created the 32 duplicate rows at 83970 and orphaned the originals (see Solution Validation addendum).</td></tr>
       </tbody>
     </table>
   </div>

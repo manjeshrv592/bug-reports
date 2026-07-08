@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TASK-30989 Deep Dive &mdash; Evidence Dossier</title>
+  <style>
+    html { scroll-behavior: smooth; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #1a1a1a; background: #fff; padding: 40px; max-width: 940px; margin: auto; }
+
+    .header { background: #1a3c6e; color: #fff; padding: 24px 28px; border-radius: 6px; margin-bottom: 28px; }
+    .header h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .header p { font-size: 12px; color: #b0c4de; }
+
+    .page-index { background: #f4f7fb; border: 1px solid #d0dbe8; border-radius: 6px; padding: 14px 20px; margin-bottom: 28px; }
+    .page-index p { font-size: 11px; font-weight: 700; color: #6b7a90; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .page-index ol { margin: 0; padding-left: 18px; }
+    .page-index li { margin-bottom: 4px; }
+    .page-index a { font-size: 13px; color: #1a3c6e; text-decoration: none; }
+    .page-index a:hover { text-decoration: underline; }
+
+    .takeaway { background: #f0f4ff; border-left: 4px solid #1a3c6e; border-radius: 0 5px 5px 0; padding: 11px 16px; margin-bottom: 18px; font-size: 12.5px; line-height: 1.6; }
+    .takeaway strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7a90; margin-bottom: 4px; }
+
+    .sec { margin-bottom: 34px; }
+    .sec-title { font-size: 15px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 14px; }
+    .sec p { line-height: 1.7; color: #333; margin-bottom: 9px; }
+    .sec ul, .sec ol { margin: 0 0 10px 22px; line-height: 1.7; color: #333; }
+
+    .step { border: 1px solid #e0e7ef; border-radius: 6px; margin-bottom: 14px; overflow: hidden; }
+    .step-header { background: #e8eef7; color: #1a3c6e; padding: 8px 14px; font-weight: 600; font-size: 12.5px; }
+    .step-body { padding: 14px 16px; }
+    .step-body p { margin-bottom: 8px; line-height: 1.65; color: #333; }
+
+    pre { background: #1e1e2e; color: #cdd6f4; padding: 14px 16px; border-radius: 5px; font-family: 'Consolas', 'Courier New', monospace; font-size: 12px; line-height: 1.6; overflow-x: auto; margin: 10px 0; white-space: pre-wrap; word-break: break-word; }
+    .src-label { font-size: 10.5px; color: #8a9bb0; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 8px; }
+
+    .result-box { background: #f0f4f0; border: 1px solid #b2d0b2; border-radius: 5px; padding: 10px 14px; font-family: 'Consolas', 'Courier New', monospace; font-size: 12px; margin: 10px 0; white-space: pre-wrap; }
+
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+    th { background: #1a3c6e; color: #fff; padding: 8px 10px; text-align: left; font-weight: 600; }
+    td { padding: 7px 10px; border-bottom: 1px solid #e0e7ef; vertical-align: top; }
+    tr:nth-child(even) td { background: #f4f7fb; }
+    .highlight-row td { background: #fdecea !important; }
+    .ok-row td { background: #eef7ee !important; }
+    .pass { color: #1a7a1a; font-weight: 700; }
+    .fail { color: #c0392b; font-weight: 700; }
+
+    .alert { border-radius: 5px; padding: 12px 16px; margin: 12px 0; font-size: 12.5px; line-height: 1.6; }
+    .alert-danger  { background: #fdecea; border-left: 4px solid #c0392b; color: #7b1e1e; }
+    .alert-warning { background: #fff8e1; border-left: 4px solid #f39c12; color: #7a5c00; }
+    .alert-info    { background: #e8f4fb; border-left: 4px solid #2980b9; color: #1a4a6e; }
+    .alert strong  { display: block; margin-bottom: 4px; }
+
+    .flow { background: #f4f7fb; border: 1px solid #d0dbe8; border-radius: 6px; padding: 14px 18px; font-family: 'Consolas', 'Courier New', monospace; font-size: 12px; line-height: 1.9; margin: 10px 0; white-space: pre; overflow-x: auto; }
+
+    .back-link { display: inline-block; margin-bottom: 20px; font-size: 12px; color: #1a3c6e; text-decoration: none; }
+    .back-link:hover { text-decoration: underline; }
+    .footer { margin-top: 36px; border-top: 1px solid #d0dbe8; padding-top: 14px; font-size: 11px; color: #888; display: flex; justify-content: space-between; }
+    @media print { body { padding: 20px; } .step { page-break-inside: avoid; } }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-link">&larr; Back to Bug Reports Index</a>
+
+  <div class="header">
+    <h1>TASK-30989 Deep Dive &mdash; Evidence Dossier</h1>
+    <p>System: BLISS &nbsp;|&nbsp; Module: Job Cost Sheet &nbsp;|&nbsp; Companion to TASK-30989.html &nbsp;|&nbsp; Compiled: 07 July 2026</p>
+  </div>
+
+  <div class="takeaway">
+    <strong>Purpose of this document</strong>
+    The summary report (TASK-30989.html) records what was done. This dossier proves <em>why</em> it was correct,
+    step by step, for readers new to the codebase. Every claim is backed by either (a) a query run on production
+    with its actual result, or (b) stored-procedure source code quoted verbatim from a full export of the BSS
+    database taken on 07 Jul 2026 (4,612 SPs/views across 16 databases). Nothing below is assumption.
+  </div>
+
+  <div class="page-index">
+    <p>Contents</p>
+    <ol>
+      <li><a href="#s1">The data model in five tables (background for newcomers)</a></li>
+      <li><a href="#s2">What "JobId" really means &mdash; a column with six meanings</a></li>
+      <li><a href="#s3">How the cost sheet is generated, and where it breaks</a></li>
+      <li><a href="#s4">The evidence trail &mdash; four queries that isolate the fault</a></li>
+      <li><a href="#s5">Why the corrupt rows existed &mdash; ff.Update_Invoice walkthrough</a></li>
+      <li><a href="#s6">The fix, and the proof that changing JobId was correct</a></li>
+      <li><a href="#s7">What could the fix have broken? Blast-radius audit</a></li>
+      <li><a href="#s8">Alternatives considered and rejected</a></li>
+      <li><a href="#s9">Detection query &mdash; find every other affected job</a></li>
+    </ol>
+  </div>
+
+
+  <!-- ============ 1 ============ -->
+  <div class="sec" id="s1">
+    <div class="sec-title">1 &mdash; The data model in five tables</div>
+    <p>An import shipment in BLISS involves these tables (all in schema <code>ff</code> unless noted):</p>
+    <table>
+      <thead><tr><th>Table</th><th>One row per&hellip;</th><th>Key columns for this case</th></tr></thead>
+      <tbody>
+        <tr><td><code>BBooking_Import</code></td><td>Import booking (the job)</td><td><code>BookingID</code>, <code>BookingNo</code></td></tr>
+        <tr><td><code>BBooking_Import_HBL</code></td><td>House Bill of Lading under a booking &mdash; <strong>one booking can have several HBLs</strong></td><td><code>HBLID</code>, <code>BookingID</code>, <code>HBLNo</code></td></tr>
+        <tr><td><code>IRevenue</code></td><td>Revenue (charge) line, attached to <em>one specific HBL</em></td><td><code>IRevenueID</code>, <code>HBLID</code>, <code>ChargeID</code></td></tr>
+        <tr><td><code>Invoice</code></td><td>Customer invoice header</td><td><code>InvoiceID</code>, <code>InvoiceNumber</code>, <code>JobId</code></td></tr>
+        <tr><td><code>Invoice_Rate</code></td><td>Invoice line &mdash; the bridge between a revenue line and an invoice</td><td><code>InvRateId</code>, <code>InvoiceID</code>, <code>RevenueID</code>, <code>JobId</code>, <code>Segment</code></td></tr>
+      </tbody>
+    </table>
+    <p>The linkage that matters here:</p>
+    <div class="flow">BBooking_Import (81203, job 2603498)
+ ├─ BBooking_Import_HBL  HBLID 83970  (HBL 2603498 — "primary")
+ └─ BBooking_Import_HBL  HBLID 84462  (HBL 7260094)
+        └─ IRevenue ×34   (ALL revenue lines live here: HBLID = 84462)
+              ▲
+              │  Invoice_Rate.RevenueID ──► IRevenue.IRevenueID
+              │  Invoice_Rate.JobId     ──► must equal that IRevenue row's HBLID
+              │  Invoice_Rate.InvoiceID ──► Invoice.InvoiceID
+Invoice 26704183 / 26704184  (the two invoices whose numbers went missing)</div>
+    <p>
+      A revenue line becomes "invoiced" when an <code>Invoice_Rate</code> row exists that points at it
+      (<code>RevenueID</code>) and at an invoice (<code>InvoiceID</code>). When revenue is first entered,
+      the system creates <code>Invoice_Rate</code> rows with <code>InvoiceID = NULL</code> ("unlinked");
+      finalizing an invoice is supposed to fill in the <code>InvoiceID</code> on those existing rows
+      (section 5 shows the exact code that does this).
+    </p>
+  </div>
+
+
+  <!-- ============ 2 ============ -->
+  <div class="sec" id="s2">
+    <div class="sec-title">2 &mdash; What "JobId" really means: a column with six meanings</div>
+    <p>
+      The name <code>Invoice_Rate.JobId</code> suggests it identifies a job. It does not.
+      Its meaning depends on the <code>Segment</code> of the row. This was established by scanning
+      every join involving this column across the full SP export (138 of 2,274 BSS objects reference
+      <code>Invoice_Rate</code>). The census of what <code>Invoice_Rate.JobId</code> is joined to:
+    </p>
+    <table>
+      <thead><tr><th>Segment</th><th>JobId is joined to&hellip;</th><th>Times seen</th><th>Example SPs (from source export)</th></tr></thead>
+      <tbody>
+        <tr><td>Export (E%)</td><td><code>ff.BBL.BLID</code> &mdash; a Bill of Lading ID</td><td>28</td><td>BInvoice_search, Costsheet_E</td></tr>
+        <tr class="highlight-row"><td><strong>Import (I%)</strong></td><td><code>ff.BBooking_Import_HBL.HBLID</code> and <code>ff.IRevenue.HBLID</code> &mdash; <strong>an HBL ID</strong></td><td>11 + 10</td><td>Costsheet_I, Dashboard_Import, Engine_Jobwise_PnL_Live, Get_Invoice_Correction, Fn_FrightRate, Get_Jobwise_Cost_Revenue_Listing</td></tr>
+        <tr><td>CHA</td><td><code>CHA.Job_CHA.CJobID</code></td><td>10</td><td>Get_CBilling_Exp_Revenue</td></tr>
+        <tr><td>Misc (M%)</td><td><code>ff.MiscJob.JobID</code></td><td>10</td><td>Get_Invoice_Id, Costsheet_M</td></tr>
+        <tr><td>Transport</td><td><code>ff.TJob.JobID</code></td><td>5</td><td>Get_Job_2Invoice_Auto, Costsheet_T</td></tr>
+        <tr><td>Warehouse</td><td><code>wh.Inward/Outward/Storage_Job</code> IDs</td><td>12</td><td>Get_WH_Revenue</td></tr>
+      </tbody>
+    </table>
+    <div class="alert alert-info">
+      <strong>Consequence</strong>
+      For an import invoice line, "changing JobId" does not change which job the line belongs to.
+      Both candidate values (83970 and 84462) are HBLs of the <em>same booking</em> 81203.
+      The question is only: which HBL of that booking should the line point at &mdash; and the code in
+      sections 3 and 5 answers that unambiguously.
+    </div>
+  </div>
+
+
+  <!-- ============ 3 ============ -->
+  <div class="sec" id="s3">
+    <div class="sec-title">3 &mdash; How the cost sheet is generated, and where it breaks</div>
+    <p>
+      The frontend calls <code>GET /api/master-api/report/getCostSheetHtml?JobID=81203&amp;spname=ff.Costsheet_I</code>,
+      which executes <code>ff.Costsheet_I @ID = 81203</code>. Inside the SP, <code>@ID</code> is the BookingID,
+      and the revenue section iterates over <em>all HBLs of the booking</em>:
+    </p>
+    <div class="src-label">ff.Costsheet_I &mdash; verbatim from source export (top of procedure)</div>
+    <pre>declare @BookingID  int=@ID, @JobID int=@ID
+declare @tabBook table (BookingID int)
+insert into @tabBook select HBLID from ff.BBooking_Import_HBL where BookingID=@BookingID</pre>
+    <p>So <code>@tabBook</code> = {83970, 84462}. The revenue rows are then selected and the invoice number attached:</p>
+    <div class="src-label">ff.Costsheet_I &mdash; verbatim, revenue block</div>
+    <pre>from ff.IRevenue r
+...
+inner join @tabBook tb          on tb.BookingID=r.HBLID
+...
+left join ff.Invoice_Rate ir    on ir.JobId=r.HBLID and ir.RevenueID=r.IRevenueID
+                                and left(ir.Segment,1)='I' and ir.isActive = 1
+left join ff.Invoice i          on i.InvoiceID=ir.InvoiceID</pre>
+    <p>Read that join carefully &mdash; it is the heart of the whole case:</p>
+    <ul>
+      <li>Revenue rows are found via <code>r.HBLID</code> &mdash; all 34 live at HBLID <strong>84462</strong>, so all 34 appear on the sheet. The revenue lines themselves were never missing.</li>
+      <li>The invoice number comes through a <strong>LEFT JOIN</strong> that requires <em>both</em> <code>ir.JobId = r.HBLID</code> <em>and</em> <code>ir.RevenueID = r.IRevenueID</code>.</li>
+      <li>Our 32 broken rows had the right <code>RevenueID</code> but <code>JobId = 83970 &ne; 84462</code>. First condition fails &rarr; LEFT JOIN yields NULL &rarr; <code>i.InvoiceNumber</code> is NULL &rarr; the <em>Vendor Inv / Invoice cell renders blank</em>. No error, no missing row &mdash; just a silently empty cell.</li>
+    </ul>
+    <div class="alert alert-info">
+      <strong>Why one charge (EBS) still showed its invoice number</strong>
+      The Emergency Bunker Surcharge invoices (26704927/26704928) were raised through the correct path and their
+      <code>Invoice_Rate</code> rows carry <code>JobId = 84462</code>. Both join conditions pass for them.
+      This working "control group" on the very same job is what proved the SP logic itself was fine
+      and the data was at fault.
+    </div>
+  </div>
+
+
+  <!-- ============ 4 ============ -->
+  <div class="sec" id="s4">
+    <div class="sec-title">4 &mdash; The evidence trail: four queries that isolate the fault</div>
+    <p>All queries were run on production during the investigation (01 Jul 2026); results shown are the actual outputs.</p>
+
+    <div class="step">
+      <div class="step-header">Evidence 1 &mdash; The booking has two HBLs</div>
+      <div class="step-body">
+        <pre>SELECT b.BookingID, b.BookingNo, h.HBLID, h.HBLNo
+FROM ff.BBooking_Import b
+JOIN ff.BBooking_Import_HBL h ON h.BookingID = b.BookingID
+WHERE b.BookingNo = '2603498' AND b.isActive = 1</pre>
+        <div class="result-box">BookingID  BookingNo  HBLID  HBLNo
+81203      2603498    83970  2603498
+81203      2603498    84462  7260094</div>
+        <p><strong>Established:</strong> this is a multi-HBL booking. Two candidate HBLIDs exist &mdash; the precondition for the whole bug.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">Evidence 2 &mdash; Four invoices exist; the visible pair and the missing pair differ in exactly one column</div>
+      <div class="step-body">
+        <pre>SELECT i.InvoiceID, i.InvoiceNumber, i.InvoiceDate, i.InvStatus,
+       ir.InvRateId, ir.JobId, ir.RevenueID, ir.Segment, ir.isActive, ir.InvStatus
+FROM ff.Invoice i
+JOIN ff.Invoice_Rate ir ON ir.InvoiceID = i.InvoiceID
+WHERE ir.JobId IN (83970, 84462) AND LEFT(ir.Segment, 1) = 'I'
+ORDER BY i.InvoiceDate</pre>
+        <div class="result-box">InvoiceID  InvoiceNumber  InvoiceDate  InvStatus  JobId  Segment  isActive   rows
+239616     26704183       2026-05-27   11         83970  I1       1          x16   &larr; MISSING on sheet
+239617     26704184       2026-05-27   11         83970  I1       1          x16   &larr; MISSING on sheet
+243117     26704927       2026-06-16   11         84462  I1       1          x1    &larr; visible (EBS)
+243118     26704928       2026-06-16   11         84462  I1       1          x1    &larr; visible (EBS)</div>
+        <p>
+          <strong>Established:</strong> every status flag is identical between the visible and missing invoices
+          (<code>InvStatus = 11</code>, <code>isActive = 1</code>, same segment). The <em>only</em> difference is
+          <code>JobId</code>: 84462 on the pair that displays, 83970 on the pair that does not. Given the join in
+          section 3, this is the prime suspect &mdash; and it also rules out every "status/filter" theory in one query.
+        </p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">Evidence 3 &mdash; All revenue lives at 84462; nothing lives at 83970</div>
+      <div class="step-body">
+        <pre>SELECT r.HBLID, COUNT(*) FROM ff.IRevenue r
+WHERE r.HBLID IN (83970, 84462) AND r.isActive = 1 GROUP BY r.HBLID
+
+SELECT ir.JobId, COUNT(*) FROM ff.Invoice_Rate ir
+WHERE ir.JobId IN (83970, 84462) AND LEFT(ir.Segment,1)='I' AND ir.isActive = 1 GROUP BY ir.JobId</pre>
+        <div class="result-box">IRevenue:      HBLID 84462 &rarr; 34 rows     (HBLID 83970 &rarr; ZERO rows)
+Invoice_Rate:  JobId 83970 &rarr; 32 rows  +  JobId 84462 &rarr; 34 rows</div>
+        <p>
+          <strong>Established:</strong> <code>IRevenue</code> has zero rows at 83970. Therefore the 32
+          <code>Invoice_Rate</code> rows sitting at <code>JobId = 83970</code> can never satisfy
+          <code>ir.JobId = r.HBLID</code> for any revenue row of this booking. They are unreachable by design.
+        </p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">Evidence 4 &mdash; The broken rows internally contradict themselves</div>
+      <div class="step-body">
+        <p>This is the decisive query. It asks: do the RevenueIDs of the rows at 83970 point at revenue that lives at 84462?</p>
+        <pre>SELECT COUNT(*) FROM ff.Invoice_Rate ir
+JOIN ff.IRevenue r ON r.IRevenueID = ir.RevenueID
+                   AND r.HBLID = 84462 AND r.isActive = 1
+WHERE ir.JobId = 83970 AND LEFT(ir.Segment,1) = 'I' AND ir.isActive = 1</pre>
+        <div class="result-box">MatchCount: 32   (all of them)</div>
+        <p>
+          <strong>Established:</strong> every one of the 32 rows says two incompatible things at once &mdash;
+          its <code>RevenueID</code> points at revenue on HBL <strong>84462</strong>, while its <code>JobId</code>
+          claims HBL <strong>83970</strong>. One of the two fields must be wrong. <code>RevenueID</code> is the
+          hard link (it decides which charge the money belongs to, and matches the amounts invoiced);
+          <code>JobId</code> is the derived locator. The locator was wrong.
+        </p>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============ 5 ============ -->
+  <div class="sec" id="s5">
+    <div class="sec-title">5 &mdash; Why the corrupt rows existed: ff.Update_Invoice walkthrough</div>
+    <p>
+      Invoice finalization is done by <code>ff.Update_Invoice</code>. The screen posts the selected charge lines as a
+      table variable <code>@Invoice_Rate</code> (each row carrying a <code>JobID</code> from the page context).
+      Two statements matter, quoted verbatim from the source export:
+    </p>
+    <div class="src-label">ff.Update_Invoice &mdash; verbatim: inserts payload rows that have no existing InvRateId</div>
+    <pre>insert into ff.Invoice_Rate (InvoiceID, ..., JobID, Segment, ..., RevenueID, InvStatus)
+select null, ..., r.JobID, r.Segment, ..., r.RevenueID, 11
+from @Invoice_Rate r
+left join ff.Invoice_Rate a on a.InvRateId=r.InvRateId and a.ContainerType=r.ContainerType
+where isNull(r.InvRateId,0)=0</pre>
+    <div class="src-label">ff.Update_Invoice &mdash; verbatim: links unlinked rows to the newly created invoice</div>
+    <pre>Update ff.Invoice_Rate set InvoiceId=@InvoiceIdentity, ...
+from ff.Invoice_Rate u, @Invoice_Rate r
+where r.JobId=u.JobID and r.isSelect=1 and isNull(u.InvoiceID,0)=0 and u.RevenueID=r.RevenueID</pre>
+    <p>Now replay what happened when invoices 26704183/26704184 were finalized with a payload carrying <code>JobID = 83970</code> (the primary HBL &mdash; the context the screen was opened under):</p>
+    <table>
+      <thead><tr><th>#</th><th>What the SP did</th><th>Result</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Payload rows had no <code>InvRateId</code> &rarr; the INSERT created <strong>32 brand-new rows</strong> copying the payload's <code>JobID = 83970</code>, <code>InvoiceID = NULL</code>.</td><td>32 new rows at 83970</td></tr>
+        <tr><td>2</td><td>The UPDATE tried to link unlinked rows matching <code>r.JobId = u.JobID AND u.RevenueID = r.RevenueID</code>. The <em>original</em> unlinked rows (created with the revenue) sit at <code>JobID = 84462</code> &rarr; <code>83970 &ne; 84462</code> &rarr; <strong>they were never matched</strong>.</td><td>Original 32 rows orphaned (InvoiceID stays NULL)</td></tr>
+        <tr><td>3</td><td>The freshly inserted rows (step 1) <em>do</em> match the payload on both fields &rarr; they got the new <code>InvoiceID</code>.</td><td>32 linked rows at the wrong HBL</td></tr>
+      </tbody>
+    </table>
+    <p>
+      Predicted end state: 32 linked rows at 83970 + 32 orphaned unlinked rows at 84462 + the 2 correctly-made EBS rows at 84462.
+      That is <em>exactly</em> the state found in Evidence 3 (32 + 34) and in the original report's Step 5
+      (32 orphans with <code>InvoiceID IS NULL</code>). The mechanism is fully explained by the SP's own code &mdash;
+      note that the SP's matching logic itself assumes the invariant <code>JobId &harr; RevenueID's HBLID</code>;
+      when the payload violates it, the SP silently duplicates instead of linking.
+    </p>
+    <div class="alert alert-warning">
+      <strong>The real bug is upstream</strong>
+      <code>ff.Update_Invoice</code> trusts the <code>JobID</code> the screen sends. When the invoicing screen is used on a
+      multi-HBL booking under the primary HBL's context while the revenue lives on another HBL, the payload carries the
+      wrong HBLID. That is the recurring defect; the database rows are only its symptom.
+    </div>
+  </div>
+
+
+  <!-- ============ 6 ============ -->
+  <div class="sec" id="s6">
+    <div class="sec-title">6 &mdash; The fix, and the proof that changing JobId was correct</div>
+    <p>The fix (01 Jul 2026, full queries in TASK-30989.html) had two parts:</p>
+    <ol>
+      <li><strong>Fix 1:</strong> <code>UPDATE ff.Invoice_Rate SET JobId = 84462</code> on the 32 linked rows (InvoiceIDs 239616/239617) &mdash; restoring the invariant.</li>
+      <li><strong>Fix 2:</strong> deactivate (<code>isActive = 0</code>) the 32 orphaned duplicates (<code>InvoiceID IS NULL</code>) that step 2 of section 5 left behind &mdash; removing the double-count.</li>
+    </ol>
+    <p>Proof of correctness, each item independently verifiable:</p>
+    <table>
+      <thead><tr><th>Proof</th><th>Statement</th><th>Source</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>P1</b></td>
+          <td>For import lines, <code>JobId</code> is an HBL locator, not a job identifier &mdash; both values belong to the same booking, so no cross-job data movement occurred.</td>
+          <td>Join census across all 4,612 SPs/views (section 2 table).</td>
+        </tr>
+        <tr>
+          <td><b>P2</b></td>
+          <td>The system's own code defines the correct value: <code>Costsheet_I</code> joins <code>ir.JobId = r.HBLID AND ir.RevenueID = r.IRevenueID</code>, and <code>Update_Invoice</code> links on <code>r.JobId = u.JobID AND u.RevenueID = r.RevenueID</code>. Both require JobId = the HBLID of the revenue row referenced by RevenueID. Our rows referenced revenue at 84462 &rarr; the only self-consistent value is 84462.</td>
+          <td>Verbatim SP source, sections 3 and 5.</td>
+        </tr>
+        <tr>
+          <td><b>P3</b></td>
+          <td>Control group: the EBS invoices on the same job, created through the correct flow, already carry <code>JobId = 84462</code>. The fix made the broken rows identical in form to rows the system itself produces when healthy.</td>
+          <td>Evidence 2 result set.</td>
+        </tr>
+        <tr>
+          <td><b>P4</b></td>
+          <td>Post-fix behavior matched prediction exactly: after Fix 1 every revenue line showed its invoice number but appeared twice (34 &rarr; 66 rows &mdash; predicted, because the orphans now also matched); after Fix 2 the sheet returned to 34 rows, each with the correct invoice number and the original total.</td>
+          <td>Frontend verification, 01 Jul 2026 (documented in TASK-30989.html).</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ============ 7 ============ -->
+  <div class="sec" id="s7">
+    <div class="sec-title">7 &mdash; What could the fix have broken? Blast-radius audit</div>
+    <p>
+      The strongest version of the team's concern is: <em>"other code might rely on JobId being 83970."</em>
+      This was checked against every SP and view in the database export:
+    </p>
+    <table>
+      <thead><tr><th>Concern</th><th>Checked</th><th>Finding</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Does anything require the invoice header's <code>Invoice.JobId</code> to equal the line's <code>Invoice_Rate.JobId</code>?</td>
+          <td>All join conditions between the two tables, all objects</td>
+          <td class="pass">No. Zero occurrences of <code>i.JobId = ir.JobId</code> anywhere. Every SP connects them via <code>ir.InvoiceId = i.InvoiceID</code> only. The header (which drives invoice search and listings) was not modified and is unaffected.</td>
+        </tr>
+        <tr>
+          <td>Does invoice <em>printing</em> read <code>Invoice_Rate.JobId</code>?</td>
+          <td><code>ff.Rpt_Invoice</code> source &mdash; every reference to Invoice_Rate in it</td>
+          <td class="pass">No. All 10+ joins in the print SP are <code>ir.InvoiceId = i.InvoiceID</code>. Printed invoices are byte-identical before/after the fix.</td>
+        </tr>
+        <tr>
+          <td>Which SPs <em>do</em> read <code>ir.JobId</code> for import rows, and what happens to them?</td>
+          <td>Full join census (section 2)</td>
+          <td class="pass"><code>Costsheet_I</code>, <code>Dashboard_Import</code>, <code>Get_Jobwise_Cost_Revenue_Listing</code>, <code>Engine_Jobwise_PnL_Live</code>, <code>Get_Invoice_Correction</code>, <code>Fn_FrightRate</code>. All of them join it to an HBLID of revenue/HBL rows &mdash; i.e. all of them were seeing NULLs or misattribution while the value was 83970, and all now resolve to the HBL where the revenue actually lives. For these SPs the fix is the <em>correction</em>, not a side effect. Job/booking-level totals are unchanged either way since both HBLs belong to booking 81203.</td>
+        </tr>
+        <tr>
+          <td>Was any money value, charge, quantity, or tax figure touched?</td>
+          <td>The two UPDATE statements</td>
+          <td class="pass">No. Fix 1 changed one locator column on 32 rows; Fix 2 flipped <code>isActive</code> on 32 rows that were never linked to any invoice. Amount columns untouched; both are reversible (revert scripts in TASK-30989.html, order-sensitive).</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ============ 8 ============ -->
+  <div class="sec" id="s8">
+    <div class="sec-title">8 &mdash; Alternatives considered and rejected</div>
+    <table>
+      <thead><tr><th>Alternative</th><th>Why it was rejected</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Do nothing ("don't touch data")</td>
+          <td>The 32 rows violate the invariant the system's own code enforces. The cost sheet (and every SP in section 7's third row) stays permanently wrong for this job. There is no code change that can make a self-contradictory row correct.</td>
+        </tr>
+        <tr>
+          <td>Move the revenue instead: <code>UPDATE ff.IRevenue SET HBLID = 83970</code></td>
+          <td>Would relocate all 34 revenue lines to the primary HBL &mdash; falsifying where the revenue belongs, and instantly breaking the two EBS invoices (243117/243118) whose correctly-created rows point at 84462. Fixes two invoices by corrupting two others.</td>
+        </tr>
+        <tr>
+          <td>Change the SP join (make <code>Costsheet_I</code> ignore JobId, join on RevenueID alone)</td>
+          <td>A code change to accommodate corrupt data. RevenueID alone is not guaranteed unique across segments/history in this schema (the join deliberately uses both fields), and every other SP in the census would still see the wrong HBL. Also requires dev/deployment cycle for what is a 32-row data defect.</td>
+        </tr>
+        <tr>
+          <td>Relink the orphans instead (set their InvoiceID, deactivate the 83970 rows)</td>
+          <td>Legitimate equivalent &mdash; the end state is the same invariant-consistent shape. It touches the same number of rows (64) and has no advantage; the chosen fix has the smaller diff on the rows that carry the invoice link.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ============ 9 ============ -->
+  <div class="sec" id="s9">
+    <div class="sec-title">9 &mdash; Detection query: find every other affected job</div>
+    <p>
+      Because the upstream defect (section 5) still exists, other multi-HBL import bookings may already carry the same
+      corruption. This query finds every active import invoice line whose <code>JobId</code> disagrees with the HBLID
+      of the revenue row it references &mdash; i.e. every row in the same broken state this task fixed:
+    </p>
+    <pre>SELECT ir.InvRateId, ir.InvoiceID, i.InvoiceNumber,
+       ir.JobId        AS RateJobId,
+       r.HBLID         AS RevenueHBLID,
+       h.BookingID, b.BookingNo
+FROM ff.Invoice_Rate ir
+JOIN ff.IRevenue r             ON r.IRevenueID = ir.RevenueID AND r.isActive = 1
+LEFT JOIN ff.Invoice i         ON i.InvoiceID = ir.InvoiceID
+LEFT JOIN ff.BBooking_Import_HBL h ON h.HBLID = r.HBLID
+LEFT JOIN ff.BBooking_Import b     ON b.BookingID = h.BookingID
+WHERE LEFT(ir.Segment, 1) = 'I'
+  AND ir.isActive = 1
+  AND ir.JobId &lt;&gt; r.HBLID
+ORDER BY b.BookingNo, ir.InvoiceID;</pre>
+    <div class="alert alert-info">
+      <strong>How to use</strong>
+      Run periodically (or after complaints of blank invoice numbers on import cost sheets).
+      Each returned row is a candidate for the same two-part fix as TASK-30989 &mdash; but verify per job,
+      following the evidence steps in section 4, before updating anything. Rows with
+      <code>InvoiceID IS NULL</code> in the result are potential orphans; rows with an InvoiceNumber are the
+      mislinked lines. If this query starts returning new rows regularly, that is the signal to prioritize the
+      frontend/payload fix in the invoicing screen.
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>BLISS &mdash; Evidence Dossier &nbsp;|&nbsp; TASK-30989 &nbsp;|&nbsp; Job Cost Sheet Module</span>
+    <span>07 July 2026</span>
+  </div>
+
+</body>
+</html>
