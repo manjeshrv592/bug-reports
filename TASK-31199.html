@@ -312,9 +312,9 @@ GHA / LFW           small        stopped Mar 2025 &mdash; fixed when their serie
       <div class="sec">
         <div class="sec-title">Solution</div>
         <p>
-          Prepared 08 Jul 2026 &mdash; to be executed and then verified in the frontend. The fix for this task is the
-          <code>SG</code> series row; NY and D are the same defect and should be applied after confirming with the
-          finance team (see the note below).
+          <strong>Applied 09 Jul 2026 and verified</strong> (series row created as NumId 31331; first issued number
+          <code>VINVSG260001</code>). The fix for this task is the <code>SG</code> series row; NY and D are the same
+          defect and should be applied after confirming with the finance team (see the note below).
         </p>
 
         <pre>-- STEP A (pre-flight): confirm SG's year-window convention from its existing series
@@ -338,13 +338,19 @@ select * from appConfig.Numbers where BranchId = 'SG' and NType = 'VINV';
 -- REVERT (only while Number is still 0, i.e. before any number has been issued):
 -- delete from appConfig.Numbers where BranchId = 'SG' and NType = 'VINV' and Number = 0;</pre>
 
-        <p><strong>Frontend verification after the fix:</strong></p>
-        <p>
-          1) Ops (Singapore) re-sends the pending cheque requests (invoice 8506988862 / job 2607794 and the job
-          2602711 import invoices are already back in pending state, so they appear on the page).
-          2) Confirm <code>ff.ICost.PurEntryNo</code> receives a real <code>VINVSG26xxxx</code> number.
-          3) Confirm the entry appears in Purchase Posting Approval under its own entry number.
-          4) Confirm rejecting one entry no longer clears any other entry.
+        <p><strong>Verification result (09 Jul 2026):</strong> QA sent the same invoice twice on the same day &mdash;
+        a clean before/after on identical data:</p>
+        <div class="result-box">04:58  invoice 7552555066 (job 2608785)  &rarr;  PurEntryNo = ParameterErr   (BEFORE the insert)
+05:41  invoice 7552555066 (job 2608785)  &rarr;  PurEntryNo = VINVSG260001   (AFTER the insert)
+       all 3 cost rows (323808 / 324098 / 324099) stamped; appConfig.Numbers counter = 1</div>
+        <p><strong>Remaining closure steps:</strong>
+          1) Ops (Singapore) re-sends the still-pending requests &mdash; invoice 8506988862 / job 2607794 and the job
+          2602711 import invoices (2553204170 / 2553206870 / 2553206871) are back in pending state and will draw the
+          next <code>VINVSG26xxxx</code> numbers.
+          2) Team confirms receipt of the "Cheque Request Raised" mail for the 05:41 send (recipients:
+          t.sasikumar / wafops / ap.intl; BCC alert@) &mdash; server-side mail logging is disabled, so mailbox check is
+          the only proof of delivery.
+          3) Reject-precision check: reject one <code>VINVSG</code>-numbered entry and confirm only its own rows clear.
         </p>
 
         <div class="alert alert-info">
@@ -490,9 +496,9 @@ TransID 720, 703, 682, 681 ... each ParameterErr reject cleared 15-59 rows
       <tbody>
         <tr>
           <td>Singapore ParameterErr entries</td>
-          <td style="color: #c0392b; font-weight: 700;">High until SG row inserted, then Low</td>
-          <td>Yes &mdash; every Singapore cheque request fails until the <code>SG</code> VINV series exists.</td>
-          <td>Apply the Issue 1 insert; verify first re-send gets a VINVSG26xxxx number.</td>
+          <td style="color: #1a7a1a; font-weight: 700;">Low &mdash; fixed 09 Jul 2026</td>
+          <td>No for new sends (series row NumId 31331 active; verified with VINVSG260001). Final ParameterErr count for S: 2,065, last at 09 Jul 04:58 &mdash; re-run the branch summary query periodically; the S line must never grow again.</td>
+          <td>Series row expires 31 Dec 2026 &mdash; seed the 2027 row (YearCode '27') before year-end or the same failure returns as 'toinsert'.</td>
         </tr>
         <tr>
           <td>Branches Y (NY) and D &mdash; same defect</td>
