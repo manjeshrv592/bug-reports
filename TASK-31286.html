@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TASK-31286 &mdash; Credit Application</title>
+  <style>
+    html { scroll-behavior: smooth; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 13px;
+      color: #1a1a1a;
+      background: #fff;
+      padding: 40px;
+      max-width: 940px;
+      margin: auto;
+    }
+
+    .header { background: #1a3c6e; color: #fff; padding: 24px 28px; border-radius: 6px; margin-bottom: 28px; }
+    .header h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .header p { font-size: 12px; color: #b0c4de; }
+
+    .meta-box {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #f4f7fb;
+      border: 1px solid #d0dbe8;
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin-bottom: 32px;
+    }
+    .meta-box .item label { font-size: 11px; color: #6b7a90; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px; }
+    .meta-box .item span { font-weight: 600; color: #1a1a1a; }
+
+    .page-index { background: #f4f7fb; border: 1px solid #d0dbe8; border-radius: 6px; padding: 14px 20px; margin-bottom: 28px; }
+    .page-index p { font-size: 11px; font-weight: 700; color: #6b7a90; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .page-index ol { margin: 0; padding-left: 18px; }
+    .page-index li { margin-bottom: 4px; }
+    .page-index a { font-size: 13px; color: #1a3c6e; text-decoration: none; }
+    .page-index a:hover { text-decoration: underline; }
+
+    .issue-block { border: 1px solid #d0dbe8; border-radius: 8px; margin-bottom: 36px; overflow: hidden; }
+    .issue-header { background: #1a3c6e; color: #fff; padding: 14px 20px; }
+    .issue-header h2 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .issue-header p { font-size: 12px; color: #b0c4de; }
+    .issue-body { padding: 20px; }
+
+    .takeaway { background: #f0f4ff; border-left: 4px solid #1a3c6e; border-radius: 0 5px 5px 0; padding: 11px 16px; margin-bottom: 18px; font-size: 12.5px; color: #1a1a1a; line-height: 1.6; }
+    .takeaway strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7a90; margin-bottom: 4px; }
+
+    .sec { margin-bottom: 22px; }
+    .sec-title { font-size: 13px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px; }
+    .sec p { line-height: 1.7; color: #333; margin-bottom: 8px; }
+
+    .step { border: 1px solid #e0e7ef; border-radius: 6px; margin-bottom: 14px; overflow: hidden; }
+    .step-header { background: #e8eef7; color: #1a3c6e; padding: 8px 14px; font-weight: 600; font-size: 12.5px; }
+    .step-body { padding: 14px 16px; }
+    .step-body p { margin-bottom: 8px; line-height: 1.6; color: #333; }
+
+    pre {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 14px 16px;
+      border-radius: 5px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin: 10px 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .result-box {
+      background: #f0f4f0;
+      border: 1px solid #b2d0b2;
+      border-radius: 5px;
+      padding: 10px 14px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      color: #1a1a1a;
+      margin: 10px 0;
+      white-space: pre-wrap;
+    }
+
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+    th { background: #1a3c6e; color: #fff; padding: 8px 10px; text-align: left; font-weight: 600; }
+    td { padding: 7px 10px; border-bottom: 1px solid #e0e7ef; vertical-align: top; }
+    tr:nth-child(even) td { background: #f4f7fb; }
+    .highlight-row td { background: #fdecea !important; }
+    .pass { color: #1a7a1a; font-weight: 700; }
+    .fail { color: #c0392b; font-weight: 700; }
+
+    .alert { border-radius: 5px; padding: 12px 16px; margin: 12px 0; font-size: 12.5px; line-height: 1.6; }
+    .alert-danger  { background: #fdecea; border-left: 4px solid #c0392b; color: #7b1e1e; }
+    .alert-warning { background: #fff8e1; border-left: 4px solid #f39c12; color: #7a5c00; }
+    .alert-info    { background: #e8f4fb; border-left: 4px solid #2980b9; color: #1a4a6e; }
+    .alert strong  { display: block; margin-bottom: 4px; }
+
+    .back-link { display: inline-block; margin-bottom: 20px; font-size: 12px; color: #1a3c6e; text-decoration: none; }
+    .back-link:hover { text-decoration: underline; }
+
+    .footer { margin-top: 36px; border-top: 1px solid #d0dbe8; padding-top: 14px; font-size: 11px; color: #888; display: flex; justify-content: space-between; }
+
+    @media print {
+      body { padding: 20px; }
+      .issue-block { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-link">&larr; Back to Bug Reports Index</a>
+
+  <div class="header">
+    <h1>TASK-31286 &mdash; Add Email ID to Credit Application Alert Notifications</h1>
+    <p>System: BLISS &nbsp;|&nbsp; Module: Credit Application &nbsp;|&nbsp; Date: 15 July 2026</p>
+  </div>
+
+  <div class="meta-box">
+    <div class="item"><label>Task</label><span>31286</span></div>
+    <div class="item"><label>Module</label><span>Credit Application</span></div>
+    <div class="item"><label>Date Reported</label><span>15 Jul 2026</span></div>
+    <div class="item"><label>Issues in Task</label><span>1</span></div>
+  </div>
+
+  <div class="page-index">
+    <p>Issues in this report</p>
+    <ol>
+      <li><a href="#issue-1">Add sreekumar.kurup@blackstoneshipping.com to Credit Application Alert emails for all West Africa branches and Dubai</a></li>
+    </ol>
+  </div>
+
+
+  <!-- ===========================
+       ISSUE 1
+       =========================== -->
+  <div class="issue-block" id="issue-1">
+    <div class="issue-header">
+      <h2>Issue 1 &mdash; Add Email ID to Credit Application Alert Emails (West Africa &amp; Dubai)</h2>
+      <p>All West Africa branches &amp; Dubai &nbsp;|&nbsp; Credit Application &rarr; Credit Application &rarr; Customer Credit Application</p>
+    </div>
+    <div class="issue-body">
+
+      <div class="takeaway">
+        <strong>Key Takeaway</strong>
+        Credit Application alert recipients are <em>hardcoded inside</em> <code>masterOps.Get_Customer_Credit_Application_Mail</code>, keyed by
+        <code>@Stage</code> and the branch's <code>CompanyId</code> (1 = India, anything else = international). There is no email config table for this
+        module, so any recipient change is a stored-procedure change. The SP only <em>returns</em> the To/Cc lists &mdash; BSSApi sends the mail
+        (and only when called with <code>isMail=1</code>) &mdash; so executing the SP in SSMS is a safe way to preview recipients without sending anything.
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Problem</div>
+        <p>
+          Request from the business: add <strong>sreekumar.kurup@blackstoneshipping.com</strong> to the Credit Application Alert email list
+          for <strong>all West Africa branches and Dubai</strong>, and confirm once done. Page: Credit Application &rarr; Credit Application &rarr;
+          Customer Credit Application. It was not known at the time whether this required a procedure change or a database (data) change.
+        </p>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Investigation</div>
+
+        <div class="step">
+          <div class="step-header">Step 1 &mdash; Trace how the alert email is generated</div>
+          <div class="step-body">
+            <p>
+              Searched the frontend and BSSApi source for the Customer Credit Application mail flow. When a stage is confirmed on the screen,
+              the Angular component calls:
+            </p>
+            <pre>GET /CustomerControllerApplication/Get_Customer_Credit_Application_Mail?TransID=..&amp;Stage=..&amp;isMail=1
+(BLISS/src/app/blisscredit-control/customer-credit-application*.component.ts)</pre>
+            <p>
+              The API endpoint (<code>BSSApi/Controllers/FIN_CustomerCreditApplication_Controller.cs</code>) executes
+              <code>masterOps.Get_Customer_Credit_Application_Mail</code> and, when <code>isMail=1</code> and the SP returns <code>isMail=1</code>,
+              sends the email itself via SMTP using the <code>mTo</code> / <code>mCc</code> / <code>mBcc</code> columns from the SP result.
+            </p>
+            <div class="result-box">Recipient lists are built entirely inside the SP &mdash; hardcoded strings selected by @Stage and @CmpID
+(OrganizationUnit.CompanyId of the application's branch). No email configuration table is involved.</div>
+            <p><strong>Conclusion:</strong> this is a stored-procedure change, not a data update.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 2 &mdash; Identify the branch codes for West Africa and Dubai</div>
+          <div class="step-body">
+            <p>Listed all branches and checked which codes actually file credit applications:</p>
+            <pre>select OuID, EdiCode, OuName, CompanyId, isActive
+from masterCom.OrganizationUnit
+order by CompanyId, OuName;
+
+select Branch, count(*) Apps, max(ADate) LastApp
+from masterOps.Customer_Credit_Application
+group by Branch order by Branch;</pre>
+            <div class="result-box">DXB = Dubai (CompanyId 10, 198 apps) &nbsp;|&nbsp; GHA = Ghana (CompanyId 12, 47 apps)
+LFW = Lome (CompanyId 13, 16 apps) &nbsp;|&nbsp; ABJ = Abidjan (CompanyId 14, 22 apps)</div>
+            <p>
+              <strong>Conclusion:</strong> the target branches are <code>DXB</code>, <code>GHA</code>, <code>LFW</code>, <code>ABJ</code> &mdash;
+              all with <code>CompanyId &lt;&gt; 1</code>, so they all flow through the SP's international recipient blocks.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 3 &mdash; Review the live SP recipient logic</div>
+          <div class="step-body">
+            <p>Pulled the live SP text to confirm the recipient blocks:</p>
+            <pre>exec sp_helptext 'masterOps.Get_Customer_Credit_Application_Mail';</pre>
+            <div class="result-box">To = salesperson + Incentive.SalesUser reporting chain + branch head (OfficialEMail from masterUser.UserMaster).
+Then, for CompanyId &lt;&gt; 1 branches:
+  Stage 1 "Credit Application Submitted"  -&gt; Cc = g.pravin; credit.global; ar.intl
+  Stage 3 "Credit Analysis Done"          -&gt; To  = g.pravin; credit.global; ar.intl; + branch head
+  Stage 4 "Credit Decision Made"          -&gt; Cc = g.pravin; credit.global; ar.intl
+Stages 2 and 5 never set isMail=1, so no email is ever sent for them.</div>
+            <p>
+              <strong>Conclusion:</strong> three alert mails exist per application (Submitted / Analysis Done / Decision Made), and the
+              West Africa + Dubai branches share the same hardcoded lists as every other non-India branch. A branch-scoped addition needs a
+              condition on <code>@Branch</code>, which the SP already holds.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 4 &mdash; Baseline: capture current recipients (no mail is sent by the SP)</div>
+          <div class="step-body">
+            <p>Executed the SP for one recent Dubai and one recent Abidjan application to record the before state:</p>
+            <pre>exec masterOps.Get_Customer_Credit_Application_Mail @TransID = 3840, @Stage = 1;  -- DXB
+exec masterOps.Get_Customer_Credit_Application_Mail @TransID = 3838, @Stage = 1;  -- ABJ</pre>
+            <div class="result-box">DXB (3840): isMail=1
+  mTo = r.rajesh@blackstoneshipping.com;b.munavir@blackstoneshipping.com
+  mCc = g.pravin@blackstoneshipping.com;credit.global@blackstoneshipping.com;ar.intl@blackstoneshipping.com
+
+ABJ (3838): isMail=1
+  mTo = it@blackstoneshipping.com;n.rajesh@blackstoneshipping.com;r.chandra@blackstoneshipping.com
+  mCc = g.pravin@blackstoneshipping.com;credit.global@blackstoneshipping.com;ar.intl@blackstoneshipping.com</div>
+            <p>
+              <strong>Conclusion:</strong> confirmed the hardcoded Cc trio on both branches and that sreekumar.kurup is nowhere in the lists.
+              Baseline recorded for before/after comparison.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Root Cause</div>
+        <div class="alert alert-danger">
+          <strong>masterOps.Get_Customer_Credit_Application_Mail &mdash; recipients hardcoded per @Stage + CompanyId</strong>
+          The Credit Application Alert recipient lists are literal strings inside the stored procedure, selected only by stage and by whether the
+          branch belongs to the India company (<code>CompanyId = 1</code>) or not. There is no branch-level email list anywhere in the database,
+          so a recipient cannot be added for specific branches without altering the procedure.
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Solution</div>
+        <p>
+          Alter <code>masterOps.Get_Customer_Credit_Application_Mail</code> (BSS database) and insert the block below
+          <strong>after the last <code>if @Stage=4 and @CmpID&lt;&gt;1 &hellip; End</code> block, immediately before the final
+          <code>select @lHtml Html, @isMail isMail, &hellip;</code></strong> line (SSMS &rarr; right-click the SP &rarr; Script Stored Procedure as &rarr; ALTER To):
+        </p>
+        <pre>-- Task 31286: add Sreekumar Kurup to Credit Application alerts for West Africa + Dubai
+if @Branch in ('DXB','GHA','LFW','ABJ')
+    set @mCc = case when isNull(@mCc,'')='' then 'sreekumar.kurup@blackstoneshipping.com'
+                else @mCc + ';sreekumar.kurup@blackstoneshipping.com' end</pre>
+        <p>
+          This adds the address as Cc on all three alert mails (Stage 1 Submitted, Stage 3 Analysis Done, Stage 4 Decision Made) for the four
+          branches only. Every other branch and all India mails are untouched. Stages 2 and 5 never send mail, so the extra Cc there is inert.
+        </p>
+        <p><strong>Verification</strong> &mdash; re-run the baseline calls after the ALTER; <code>mCc</code> must now end with the new address, and a
+          non-target branch (e.g. a Rotterdam TransID) must return an unchanged <code>mCc</code>:</p>
+        <pre>exec masterOps.Get_Customer_Credit_Application_Mail @TransID = 3840, @Stage = 1;  -- DXB: mCc ends ;sreekumar.kurup@...
+exec masterOps.Get_Customer_Credit_Application_Mail @TransID = 3838, @Stage = 1;  -- ABJ: mCc ends ;sreekumar.kurup@...</pre>
+        <p><strong>Revert</strong> &mdash; script the SP as ALTER again, delete the three inserted lines, execute.</p>
+        <div class="alert alert-info">
+          <strong>Scope note</strong>
+          The request said "Credit Application Alert email list", which was read as all three alert mails of the module. If the requester meant
+          only the Stage-1 "Credit Application Submitted" alert, change the condition to
+          <code>if @Stage=1 and @Branch in ('DXB','GHA','LFW','ABJ')</code>. Live-mail confirmation happens naturally on the next credit
+          application submitted from any of the four branches.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- Recurrence Risk -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Recurrence Risk</div>
+    <table>
+      <thead>
+        <tr><th>Issue</th><th>Risk</th><th>Will It Recur?</th><th>Action Required Until Permanent Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Recipient lists hardcoded in the SP</td>
+          <td style="color: #f39c12; font-weight: 700;">Medium</td>
+          <td>Yes &mdash; every future add/remove of a Credit Application alert recipient requires another ALTER of this SP. The lists are
+              duplicated across six stage/company blocks (and again in the unused sibling SP <code>&hellip;_Mail_By_LeadID</code>), so partial edits
+              are easy to get wrong.</td>
+          <td>Use this report as the map of where each list lives. Permanent improvement: move recipients to a config table keyed by
+              branch/stage (same pattern as <code>ff.Email</code> used by Cheque Request).</td>
+        </tr>
+        <tr>
+          <td>Address-list truncation</td>
+          <td style="color: #1a7a1a; font-weight: 700;">Low</td>
+          <td>Possible &mdash; <code>@mTo</code> / <code>@mCc</code> are <code>varchar(500)</code>. A long sales reporting chain plus appended
+              addresses could silently truncate the list (SQL Server truncates on assignment without error here).</td>
+          <td>When adding more recipients in future, check the combined length of the longest To/Cc string.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Observations -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Observations</div>
+    <p style="color: #333; line-height: 1.7; margin-bottom: 10px;">
+      Things seen during the investigation that look wrong but are expected behavior &mdash; not part of this change:
+    </p>
+    <table>
+      <thead>
+        <tr><th>Observation</th><th>Where Seen</th><th>Reason</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>r.chandra@blackstoneshipping.com</code> in a To list</td>
+          <td>ABJ baseline (TransID 3838)</td>
+          <td>The API replaces <code>r.chandra@</code> and <code>logistics@</code> with <code>credit.global@blackstoneshipping.com</code> before
+              sending (hardcoded <code>Replace</code> in <code>FIN_CustomerCreditApplication_Controller.cs</code>), so the sent mail does not go to
+              that address.</td>
+        </tr>
+        <tr>
+          <td><code>it@blackstoneshipping.com</code> in a To list</td>
+          <td>ABJ baseline (TransID 3838)</td>
+          <td>The To list is the salesperson's <code>Incentive.SalesUser</code> reporting chain plus the branch head; one of those users has this
+              <code>OfficialEMail</code> in <code>masterUser.UserMaster</code>. Data-driven, not hardcoded.</td>
+        </tr>
+        <tr>
+          <td>Sibling SP <code>masterOps.Get_Customer_Credit_Application_Mail_By_LeadID</code> has the same hardcoded lists</td>
+          <td>SP source review</td>
+          <td>Its API endpoint never sends mail and the frontend does not call it, so it was deliberately left unchanged.</td>
+        </tr>
+        <tr>
+          <td>New Cc also set for Stages 2 and 5</td>
+          <td>The fix appends unconditionally on stage</td>
+          <td>Harmless &mdash; the SP never sets <code>isMail=1</code> for Stages 2 (Company Info) and 5 (Credit Review), so no mail is sent for them.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Tables & Objects Involved -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Tables &amp; Objects Involved</div>
+    <table>
+      <thead>
+        <tr><th>Object</th><th>Type</th><th>Role</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>masterOps.Get_Customer_Credit_Application_Mail</td><td>SP</td><td>Builds the alert email body and the hardcoded To/Cc/Bcc lists &mdash; object changed for this task</td></tr>
+        <tr><td>masterOps.Get_Customer_Credit_Application_Mail_By_LeadID</td><td>SP</td><td>Sibling copy of the mail SP; endpoint never sends mail &mdash; left unchanged</td></tr>
+        <tr><td>masterOps.Customer_Credit_Application</td><td>Table</td><td>Credit application records (TransID, Branch, stage Sent flags)</td></tr>
+        <tr><td>masterCom.OrganizationUnit</td><td>Table</td><td>Branch master &mdash; EdiCode &rarr; CompanyId decides India vs international recipient blocks</td></tr>
+        <tr><td>masterUser.UserMaster / Incentive.SalesUser</td><td>Table</td><td>Source of the data-driven To list (salesperson, reporting chain, branch head)</td></tr>
+        <tr><td>FIN_CustomerCreditApplication_Controller.cs</td><td>API</td><td>BSSApi controller &mdash; executes the SP and sends the SMTP mail when isMail=1</td></tr>
+        <tr><td>customer-credit-application*.component.ts</td><td>Frontend</td><td>Angular screens that call the endpoint with isMail=1 on stage confirmation</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <span>BLISS &mdash; Bug Report &nbsp;|&nbsp; TASK-31286 &nbsp;|&nbsp; Credit Application</span>
+    <span>15 Jul 2026</span>
+  </div>
+
+</body>
+</html>

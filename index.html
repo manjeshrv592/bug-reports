@@ -118,6 +118,17 @@
         file: 'TASK-31199.html',
         summary: 'Singapore cheque requests saved with PurEntryNo=\'ParameterErr\' — no appConfig.Numbers VINV series for the remapped branch code SG. Shared key made every rejection mass-wipe the branch\'s pending queue (up to 150 rows per reject). Fix applied & verified 09 Jul 2026 (VINVSG260001). Branches Y (NY) and D have the same defect — inserts drafted, pending sign-off.'
       },
+      {
+        task: '31286',
+        title: 'Add Email ID to Credit Application Alert Notifications',
+        module: 'Credit Application',
+        branch: 'West Africa (GHA / LFW / ABJ) & Dubai (DXB)',
+        jobs: '—',
+        invoices: '—',
+        date: '15 Jul 2026',
+        file: 'TASK-31286.html',
+        summary: 'Request to add sreekumar.kurup@ to Credit Application Alert emails for West Africa & Dubai. Recipients are hardcoded in masterOps.Get_Customer_Credit_Application_Mail per Stage + CompanyId — no config table. Fix: branch-conditional Cc append in the SP for DXB/GHA/LFW/ABJ.'
+      },
       // Add new reports here
     ];
 
