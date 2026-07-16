@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TASK-31287 &mdash; Sea Import / Invoice</title>
+  <style>
+    html { scroll-behavior: smooth; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 13px;
+      color: #1a1a1a;
+      background: #fff;
+      padding: 40px;
+      max-width: 940px;
+      margin: auto;
+    }
+
+    .header { background: #1a3c6e; color: #fff; padding: 24px 28px; border-radius: 6px; margin-bottom: 28px; }
+    .header h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .header p { font-size: 12px; color: #b0c4de; }
+
+    .meta-box {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #f4f7fb;
+      border: 1px solid #d0dbe8;
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin-bottom: 32px;
+    }
+    .meta-box .item label { font-size: 11px; color: #6b7a90; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px; }
+    .meta-box .item span { font-weight: 600; color: #1a1a1a; }
+
+    .page-index { background: #f4f7fb; border: 1px solid #d0dbe8; border-radius: 6px; padding: 14px 20px; margin-bottom: 28px; }
+    .page-index p { font-size: 11px; font-weight: 700; color: #6b7a90; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .page-index ol { margin: 0; padding-left: 18px; }
+    .page-index li { margin-bottom: 4px; }
+    .page-index a { font-size: 13px; color: #1a3c6e; text-decoration: none; }
+    .page-index a:hover { text-decoration: underline; }
+
+    .issue-block { border: 1px solid #d0dbe8; border-radius: 8px; margin-bottom: 36px; overflow: hidden; }
+    .issue-header { background: #1a3c6e; color: #fff; padding: 14px 20px; }
+    .issue-header h2 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .issue-header p { font-size: 12px; color: #b0c4de; }
+    .issue-body { padding: 20px; }
+
+    .takeaway { background: #f0f4ff; border-left: 4px solid #1a3c6e; border-radius: 0 5px 5px 0; padding: 11px 16px; margin-bottom: 18px; font-size: 12.5px; color: #1a1a1a; line-height: 1.6; }
+    .takeaway strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7a90; margin-bottom: 4px; }
+
+    .sec { margin-bottom: 22px; }
+    .sec-title { font-size: 13px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px; }
+    .sec p { line-height: 1.7; color: #333; margin-bottom: 8px; }
+
+    .step { border: 1px solid #e0e7ef; border-radius: 6px; margin-bottom: 14px; overflow: hidden; }
+    .step-header { background: #e8eef7; color: #1a3c6e; padding: 8px 14px; font-weight: 600; font-size: 12.5px; }
+    .step-body { padding: 14px 16px; }
+    .step-body p { margin-bottom: 8px; line-height: 1.6; color: #333; }
+
+    pre {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 14px 16px;
+      border-radius: 5px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin: 10px 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .result-box {
+      background: #f0f4f0;
+      border: 1px solid #b2d0b2;
+      border-radius: 5px;
+      padding: 10px 14px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      color: #1a1a1a;
+      margin: 10px 0;
+      white-space: pre-wrap;
+    }
+
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+    th { background: #1a3c6e; color: #fff; padding: 8px 10px; text-align: left; font-weight: 600; }
+    td { padding: 7px 10px; border-bottom: 1px solid #e0e7ef; vertical-align: top; }
+    tr:nth-child(even) td { background: #f4f7fb; }
+    .highlight-row td { background: #fdecea !important; }
+    .pass { color: #1a7a1a; font-weight: 700; }
+    .fail { color: #c0392b; font-weight: 700; }
+
+    .alert { border-radius: 5px; padding: 12px 16px; margin: 12px 0; font-size: 12.5px; line-height: 1.6; }
+    .alert-danger  { background: #fdecea; border-left: 4px solid #c0392b; color: #7b1e1e; }
+    .alert-warning { background: #fff8e1; border-left: 4px solid #f39c12; color: #7a5c00; }
+    .alert-info    { background: #e8f4fb; border-left: 4px solid #2980b9; color: #1a4a6e; }
+    .alert strong  { display: block; margin-bottom: 4px; }
+
+    .back-link { display: inline-block; margin-bottom: 20px; font-size: 12px; color: #1a3c6e; text-decoration: none; }
+    .back-link:hover { text-decoration: underline; }
+
+    .footer { margin-top: 36px; border-top: 1px solid #d0dbe8; padding-top: 14px; font-size: 11px; color: #888; display: flex; justify-content: space-between; }
+
+    @media print {
+      body { padding: 20px; }
+      .issue-block { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-link">&larr; Back to Bug Reports Index</a>
+
+  <div class="header">
+    <h1>TASK-31287 &mdash; HBL No Showing Incorrect &mdash; Dubai Branch</h1>
+    <p>System: BLISS &nbsp;|&nbsp; Module: Sea Import / Invoice &nbsp;|&nbsp; Date: 16 July 2026</p>
+  </div>
+
+  <div class="meta-box">
+    <div class="item"><label>Task</label><span>31287</span></div>
+    <div class="item"><label>Module</label><span>Sea Import / Invoice</span></div>
+    <div class="item"><label>Date Reported</label><span>16 Jul 2026</span></div>
+    <div class="item"><label>Issues in Task</label><span>1</span></div>
+  </div>
+
+  <div class="page-index">
+    <p>Issues in this report</p>
+    <ol>
+      <li><a href="#issue-1">HBL No displayed as &ldquo;MSC EMANUELA&rdquo; on the Invoice page for job 2609977 (Dubai)</a></li>
+    </ol>
+  </div>
+
+
+  <!-- ===========================
+       ISSUE 1
+       =========================== -->
+  <div class="issue-block" id="issue-1">
+    <div class="issue-header">
+      <h2>Issue 1 &mdash; HBL No Showing Incorrect on Invoice Page</h2>
+      <p>Job 2609977 &nbsp;|&nbsp; Dubai (DXB) &nbsp;|&nbsp; MBL MEDUYF745606 &nbsp;|&nbsp; Invoice &gt; Invoice &gt; Invoice</p>
+    </div>
+    <div class="issue-body">
+
+      <div class="takeaway">
+        <strong>Key Takeaway</strong>
+        When a BL number field displays something that reads like a ship name, check the stored record against
+        <code>masterOps.VesselMaster</code> before suspecting the display SP. <code>HBLNo</code> is a free-text
+        varchar(30) written verbatim from the booking screen &mdash; the screen accepts anything, and the Invoice
+        page faithfully shows whatever was saved.
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Problem</div>
+        <p>
+          Dubai branch reported that for job <strong>2609977</strong> (MBL <strong>MEDUYF745606</strong>) the
+          HBL No is showing as <strong>&ldquo;MSC EMANUELA&rdquo;</strong> on the Invoice page
+          (Invoice &gt; Invoice &gt; Invoice). &ldquo;MSC EMANUELA&rdquo; is the name of an MSC container vessel,
+          not a bill of lading number. The branch asked whether the problem is in a procedure or in the database.
+        </p>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Investigation</div>
+
+        <div class="step">
+          <div class="step-header">Step 1 &mdash; Locate the job and see what is actually stored</div>
+          <div class="step-body">
+            <p>
+              Job numbers are not unique across job types, so we searched both the import side
+              (<code>ff.BBooking_Import</code> + <code>ff.BBooking_Import_HBL</code>) and the export side
+              (<code>ff.BBooking</code> + <code>ff.BBL</code>) by job number and MBL number. The goal: determine
+              whether the database itself holds &ldquo;MSC EMANUELA&rdquo; (data problem) or holds a proper BL
+              number that the screen is mangling (display/SP problem).
+            </p>
+            <pre>-- 1a: Import side
+SELECT bk.BookingID, bk.BookingNo, bk.Branch, bk.Segment, bk.MBLNo,
+       bk.isActive AS BkActive,
+       h.HBLID, h.HBLNo, h.HBLDate, h.isActive AS HblActive
+FROM ff.BBooking_Import bk
+LEFT JOIN ff.BBooking_Import_HBL h ON h.BookingID = bk.BookingID
+WHERE bk.BookingNo = '2609977' OR bk.MBLNo = 'MEDUYF745606';
+
+-- 1b: Export side
+SELECT b.BookingID, b.BookingNumber, b.Branch, b.Segment, b.isActive,
+       bl.BLID, bl.BLNumber AS HBLNo, bl.MBLNo
+FROM ff.BBooking b
+LEFT JOIN ff.BBL bl ON bl.BookingID = b.BookingID
+WHERE b.BookingNumber = '2609977' OR bl.MBLNo = 'MEDUYF745606';</pre>
+            <div class="result-box">1a: BookingID 86123 | BookingNo 2609977 | DXB | Segment I2 | MBLNo MEDUYF745606 | active
+    HBLID 89323 | HBLNo = 'MSC EMANUELA' | HBLDate 2026-06-17 | active
+
+1b: (no rows)</div>
+            <p>
+              The job is a sea import booking at Dubai with a single HBL, and the HBL record itself has
+              <code>HBLNo = 'MSC EMANUELA'</code> stored in it. This is a <strong>data problem</strong>, not a
+              display or procedure problem &mdash; the Invoice page shows exactly what is saved.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 2 &mdash; Compare the stored HBL No against the booking's vessel</div>
+          <div class="step-body">
+            <p>
+              The HBL entry section of the Import Booking screen carries vessel fields (<code>VesselID</code>,
+              <code>Voyage</code>) alongside the HBL No box, and <code>ff.Update_BBooking_Import</code> writes the
+              screen payload to the table verbatim. If the booking's assigned vessel is MSC EMANUELA, the vessel
+              name was entered into the HBL No field. We also checked whether the HBL table carries audit columns.
+            </p>
+            <pre>-- 2a: HBL row with vessel + booking context
+SELECT h.HBLID, h.HBLNo, h.HBLDate, h.VesselID, v.VesselName, h.Voyage,
+       h.CustomerRefNo, h.SAPNo, h.ShippedOnBoard,
+       bk.BookingDate, bk.MBLNo, bk.MBLDate, bk.NoOfHBL
+FROM ff.BBooking_Import_HBL h
+LEFT JOIN masterOps.VesselMaster v ON v.VesselID = h.VesselID
+JOIN ff.BBooking_Import bk ON bk.BookingID = h.BookingID
+WHERE h.HBLID = 89323;
+
+-- 2b: audit columns on ff.BBooking_Import_HBL?
+SELECT c.name
+FROM sys.columns c
+WHERE c.object_id = OBJECT_ID('ff.BBooking_Import_HBL')
+  AND (c.name LIKE '%Creat%' OR c.name LIKE '%Modif%' OR c.name LIKE '%Edit%' OR c.name LIKE '%User%');</pre>
+            <div class="result-box">2a: HBLID 89323 | HBLNo 'MSC EMANUELA' | HBLDate 2026-06-17
+    VesselID 5438 | VesselName = 'MSC EMANUELA' | Voyage QS619A
+    CustomerRefNo (blank) | SAPNo (blank) | ShippedOnBoard 2026-05-14
+    BookingDate 2026-06-17 | MBLNo MEDUYF745606 | MBLDate 2026-06-17 | NoOfHBL 1
+
+2b: (no rows &mdash; the HBL table has no audit columns)</div>
+            <p>
+              Confirmed: the booking's vessel (VesselID 5438) is literally named <strong>MSC EMANUELA</strong> &mdash;
+              the same text sitting in the HBL No field. The vessel name was entered into the HBL No box.
+              <code>CustomerRefNo</code> and <code>SAPNo</code> are both blank, so the correct HBL number is
+              <strong>not recoverable from the system</strong> &mdash; it must come from the branch / origin agent
+              documents.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 3 &mdash; Check whether the same mistake exists on other jobs</div>
+          <div class="step-body">
+            <p>
+              Swept every active import HBL in the system for rows where the stored HBL No equals the name of the
+              vessel assigned to that HBL. Also listed audit columns on the booking header to identify who made
+              the entry.
+            </p>
+            <pre>-- 3a: audit columns on the booking header
+SELECT c.name
+FROM sys.columns c
+WHERE c.object_id = OBJECT_ID('ff.BBooking_Import')
+  AND (c.name LIKE '%Creat%' OR c.name LIKE '%Modif%' OR c.name LIKE '%Copie%' OR c.name LIKE '%User%');
+
+-- 3b: recurrence sweep across all active import HBLs
+SELECT bk.Branch, bk.BookingNo, bk.BookingDate, h.HBLID, h.HBLNo, v.VesselName
+FROM ff.BBooking_Import_HBL h
+JOIN ff.BBooking_Import bk ON bk.BookingID = h.BookingID
+JOIN masterOps.VesselMaster v ON v.VesselID = h.VesselID
+WHERE h.isActive = 1 AND bk.isActive = 1
+  AND UPPER(LTRIM(RTRIM(h.HBLNo))) = UPPER(LTRIM(RTRIM(v.VesselName)))
+ORDER BY bk.BookingDate DESC;</pre>
+            <div class="result-box">3a: CreatedBy, Created, CopiedFromID, CopiedBy, Copied
+
+3b: DXB | 2609977      | 2026-06-17 | 89323 | MSC EMANUELA   | MSC EMANUELA   &larr; this job
+    R   | RTMI20232830 | 2023-12-05 | 40801 | 7743 3118 8591 | 7743 3118 8591</div>
+            <p>
+              Only one other match in ~70,000 import HBLs: a 2023 Rotterdam job where the &ldquo;vessel&rdquo; in
+              VesselMaster is itself named <code>7743 3118 8591</code> (a master-data oddity, not the same
+              entry mistake). This is an <strong>isolated incident</strong>, not a pattern.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 4 &mdash; Identify who created the booking and when</div>
+          <div class="step-body">
+            <pre>SELECT bk.BookingID, bk.BookingNo, bk.CreatedBy, u.UserName AS CreatedByName, bk.Created,
+       bk.CopiedFromID, bk.CopiedBy, u2.UserName AS CopiedByName, bk.Copied
+FROM ff.BBooking_Import bk
+LEFT JOIN masterUser.UserMaster u  ON u.UserID = bk.CreatedBy
+LEFT JOIN masterUser.UserMaster u2 ON u2.UserID = bk.CopiedBy
+WHERE bk.BookingID = 86123;</pre>
+            <div class="result-box">BookingID 86123 | BookingNo 2609977
+CreatedBy 2752 (David Livingston) | Created 2026-06-17 19:19:10
+CopiedFromID NULL | CopiedBy 2752 | Copied 2026-06-17 19:19:10</div>
+            <p>
+              The booking was created fresh (not copied from another job &mdash; <code>CopiedFromID</code> is NULL)
+              by David Livingston on 17 Jun 2026 at 19:19, the same day as the booking, MBL and HBL dates. The
+              vessel name went into the HBL No field at initial data entry.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Root Cause</div>
+        <div class="alert alert-danger">
+          <strong>ff.BBooking_Import_HBL &mdash; HBLID 89323: HBLNo = 'MSC EMANUELA' (the vessel's name)</strong>
+          Data entry error at booking creation. The vessel assigned to the booking (VesselID 5438) is named
+          MSC EMANUELA, and that name was typed into the HBL No field on the Import Booking screen.
+          <code>ff.Update_BBooking_Import</code> saves the screen payload verbatim with no validation on
+          <code>HBLNo</code>, and the Invoice page displays the stored value as-is. Nothing is wrong with any
+          procedure &mdash; the database value itself is wrong.
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Solution</div>
+        <p>
+          The correct HBL number exists nowhere in the system (<code>CustomerRefNo</code> and <code>SAPNo</code>
+          are blank on the HBL record), so it must be supplied by the Dubai branch from the origin agent's
+          documents. Once received, the fix is a one-row update. Invoices reference the HBL by
+          <code>HBLID</code>, so no invoice rows need touching &mdash; the Invoice page reflects the correction
+          immediately.
+        </p>
+        <pre>-- PREVIEW (expect exactly 1 row: HBLID 89323, HBLNo 'MSC EMANUELA')
+SELECT HBLID, BookingID, HBLNo, HBLDate
+FROM ff.BBooking_Import_HBL
+WHERE HBLID = 89323;
+
+-- FIX (expect: 1 row affected; HBLNo is varchar(30))
+UPDATE ff.BBooking_Import_HBL
+SET HBLNo = '&lt;CORRECT_HBL_NO&gt;'
+WHERE HBLID = 89323 AND HBLNo = 'MSC EMANUELA';
+
+-- REVERT (if ever needed)
+UPDATE ff.BBooking_Import_HBL
+SET HBLNo = 'MSC EMANUELA'
+WHERE HBLID = 89323;</pre>
+        <div class="alert alert-info">
+          <strong>Fix pending the correct HBL number from the Dubai branch</strong>
+          Requested the real HBL No for job 2609977 / MBL MEDUYF745606 from the branch. The
+          <code>AND HBLNo = 'MSC EMANUELA'</code> guard makes the update a no-op if the row has already been
+          corrected in the meantime. Verify on the Invoice page after applying.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- Recurrence Risk -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Recurrence Risk</div>
+    <table>
+      <thead>
+        <tr><th>Issue</th><th>Risk</th><th>Will It Recur?</th><th>Action Required Until Permanent Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Vessel name entered in HBL No field</td>
+          <td style="color: #1a7a1a; font-weight: 700;">Low</td>
+          <td>Possible but historically rare &mdash; <code>HBLNo</code> is free-text with no validation, yet a
+              sweep of all ~70,000 active import HBLs found no other genuine case of this mistake.</td>
+          <td>Fix the value directly in <code>ff.BBooking_Import_HBL</code> when reported (one-row update by
+              HBLID). If it starts recurring, consider a screen/SP validation rejecting an HBL No that matches
+              the selected vessel's name.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Observations -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Observations</div>
+    <p style="color: #333; line-height: 1.7; margin-bottom: 10px;">
+      Things noticed during the investigation that look odd but are expected behavior / not part of this bug:
+    </p>
+    <table>
+      <thead>
+        <tr><th>Observation</th><th>Where</th><th>Reason</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>CopiedBy</code> / <code>Copied</code> are populated even though <code>CopiedFromID</code> is NULL</td>
+          <td><code>ff.BBooking_Import</code>, BookingID 86123</td>
+          <td>The save routine stamps these fields on creation regardless; <code>CopiedFromID</code> NULL is the
+              reliable indicator that the booking was not copied from another job.</td>
+        </tr>
+        <tr>
+          <td>A VesselMaster entry named <code>7743 3118 8591</code> matched the recurrence sweep</td>
+          <td><code>masterOps.VesselMaster</code> / Rotterdam job RTMI20232830 (2023)</td>
+          <td>Master-data oddity &mdash; a &ldquo;vessel&rdquo; whose name is a number that also appears as that
+              job's HBL No. Coincidental match, not the same data entry mistake; left untouched.</td>
+        </tr>
+        <tr>
+          <td><code>ff.BBooking_Import_HBL</code> has no CreatedBy/ModifiedBy columns</td>
+          <td><code>ff.BBooking_Import_HBL</code></td>
+          <td>By design &mdash; attribution of HBL data entry has to come from the booking header's
+              <code>CreatedBy</code>/<code>Created</code>.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Tables & Objects Involved -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Tables &amp; Objects Involved</div>
+    <table>
+      <thead>
+        <tr><th>Object</th><th>Type</th><th>Role</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>ff.BBooking_Import_HBL</td><td>Table</td><td>Import HBL record &mdash; holds the wrong <code>HBLNo</code> (HBLID 89323); target of the fix</td></tr>
+        <tr><td>ff.BBooking_Import</td><td>Table</td><td>Import booking header (BookingID 86123) &mdash; MBL, branch, and the <code>CreatedBy</code>/<code>Created</code> audit trail</td></tr>
+        <tr><td>masterOps.VesselMaster</td><td>Table</td><td>Vessel master &mdash; confirmed VesselID 5438 = &ldquo;MSC EMANUELA&rdquo;, proving the vessel name was entered as the HBL No</td></tr>
+        <tr><td>ff.Update_BBooking_Import</td><td>SP</td><td>Saves the Import Booking screen's XML payload verbatim &mdash; no validation on <code>HBLNo</code></td></tr>
+        <tr><td>masterUser.UserMaster</td><td>Table</td><td>Resolved <code>CreatedBy</code> 2752 to the user who made the entry</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <span>BLISS &mdash; Bug Report &nbsp;|&nbsp; TASK-31287 &nbsp;|&nbsp; Sea Import / Invoice</span>
+    <span>16 Jul 2026</span>
+  </div>
+
+</body>
+</html>

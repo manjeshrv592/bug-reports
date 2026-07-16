@@ -129,6 +129,17 @@
         file: 'TASK-31286.html',
         summary: 'Request to add sreekumar.kurup@ to Credit Application Alert emails for West Africa & Dubai. Recipients are hardcoded in masterOps.Get_Customer_Credit_Application_Mail per Stage + CompanyId — no config table. Fix: branch-conditional Cc append in the SP for DXB/GHA/LFW/ABJ.'
       },
+      {
+        task: '31287',
+        title: 'HBL No Showing Incorrect on Invoice Page',
+        module: 'Sea Import / Invoice',
+        branch: 'Dubai (DXB)',
+        jobs: '2609977',
+        invoices: '—',
+        date: '16 Jul 2026',
+        file: 'TASK-31287.html',
+        summary: 'HBL No displayed as "MSC EMANUELA" — the booking\'s vessel name was typed into the HBL No field at data entry (HBLNo is free-text, saved verbatim). Isolated incident; one-row fix drafted, pending the correct HBL number from the Dubai branch.'
+      },
       // Add new reports here
     ];
 
