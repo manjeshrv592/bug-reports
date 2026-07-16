@@ -293,14 +293,114 @@ CopiedFromID NULL | CopiedBy 2752 | Copied 2026-06-17 19:19:10</div>
           </div>
         </div>
 
+        <div class="step">
+          <div class="step-header">Step 5 &mdash; Search the system for the actual HBL number</div>
+          <div class="step-body">
+            <p>
+              With the wrong value confirmed, we needed the correct one. Checked every place the real HBL number
+              could exist inside BLISS: documents uploaded against the job, the agents recorded on the HBL
+              (to request the origin pre-alert), and the export side of the network (if the origin agent were a
+              Blackstone office, their export BL number would be the HBL) &mdash; matched by fuzzy MBL and by
+              container number.
+            </p>
+            <pre>-- 5a: documents uploaded against the job
+SELECT DocID, JobID, Segment, DType, DisplayName, DFileName, isActive
+FROM ff.Documents_Job
+WHERE JobID IN (86123, 89323)
+ORDER BY DocID DESC;
+
+-- 5b: agents / parties on the HBL
+SELECT ag.CuName AS Agent, oa.CuName AS OriginAgent, na.CuName AS NetworkAgent,
+       sh.CuName AS Shipper, cn.CuName AS Consignee
+FROM ff.BBooking_Import_HBL h
+LEFT JOIN masterOps.Customer ag ON ag.CustomerID = h.AgentID
+LEFT JOIN masterOps.Customer oa ON oa.CustomerID = h.OrginAgentID
+LEFT JOIN masterOps.Customer na ON na.CustomerID = h.NetworkAgentID
+LEFT JOIN masterOps.Customer sh ON sh.CustomerID = h.ShipperID
+LEFT JOIN masterOps.Customer cn ON cn.CustomerID = h.ConsigneeID
+WHERE h.HBLID = 89323;
+
+-- 5c: export side by fuzzy MBL, and by container
+SELECT b.BookingNumber, b.Branch, bl.BLID, bl.BLNumber AS HBLNo, bl.MBLNo
+FROM ff.BBL bl
+JOIN ff.BBooking b ON b.BookingID = bl.BookingID
+WHERE bl.MBLNo LIKE '%745606%';
+
+SELECT * FROM ff.BBooking_Import_HBL_Container WHERE HBLID = 89323;
+
+SELECT bl.BLID, bl.BLNumber AS HBLNo, bl.MBLNo, b.BookingNumber, b.Branch
+FROM ff.BBL_Container c
+JOIN ff.BBL bl     ON bl.BLID = c.BLID
+JOIN ff.BBooking b ON b.BookingID = bl.BookingID
+WHERE c.ContainerNo = 'MEDU6358756';</pre>
+            <div class="result-box">5a: (no rows &mdash; no documents uploaded against the job)
+
+5b: Agent NULL | OriginAgent NULL | NetworkAgent NULL
+    Shipper: BEINEI (TIANJIN) TECHNOLOGY CO LTD. | Consignee: ARABIAN EQUIPMENT RENTAL L.L.C
+
+5c: fuzzy MBL &mdash; (no rows)
+    container row: HBLID 89323 | ContainerNo MEDU6358756 | Seal FX46519197
+    export BLs carrying MEDU6358756 &mdash; (no rows)</div>
+            <p>
+              The real HBL number exists nowhere in BLISS. More telling: <strong>no agent of any kind is recorded
+              on the HBL</strong> &mdash; just a factory shipper in Tianjin and the end consignee in Dubai. This is a
+              <strong>direct shipment with no origin forwarder</strong>, meaning no separately-issued house BL is
+              likely to exist at all. That also explains the bad entry: the HBL No box had to be filled with
+              <em>something</em>.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 6 &mdash; Establish what the field should contain: the branch convention</div>
+          <div class="step-body">
+            <p>
+              If no house BL exists, what does Dubai normally put in the HBL No field on direct shipments?
+              Checked this consignee's booking history and the branch-wide pattern.
+            </p>
+            <pre>-- 6a: this consignee's previous import jobs
+SELECT bk.BookingNo, bk.BookingDate, bk.MBLNo, h.HBLNo, h.HBLDate,
+       CASE WHEN h.HBLNo = bk.MBLNo THEN 'HBL = MBL' ELSE '' END AS Pattern
+FROM ff.BBooking_Import_HBL h
+JOIN ff.BBooking_Import bk ON bk.BookingID = h.BookingID
+WHERE h.ConsigneeID = (SELECT ConsigneeID FROM ff.BBooking_Import_HBL WHERE HBLID = 89323)
+  AND h.isActive = 1 AND bk.isActive = 1
+ORDER BY bk.BookingDate DESC;
+
+-- 6b: how common is HBLNo = MBLNo across DXB imports?
+SELECT SUM(CASE WHEN h.HBLNo = bk.MBLNo THEN 1 ELSE 0 END) AS HblEqualsMbl,
+       COUNT(*) AS TotalDxbHbls
+FROM ff.BBooking_Import_HBL h
+JOIN ff.BBooking_Import bk ON bk.BookingID = h.BookingID
+WHERE bk.Branch = 'DXB' AND h.isActive = 1 AND bk.isActive = 1;</pre>
+            <div class="result-box">6a: 2609977 | 2026-06-17 | MEDUYF745606   | MSC EMANUELA   |            &larr; this job
+    2609894 | 2026-06-16 | 176 6416 7703  | 176 6416 7703  | HBL = MBL
+    2609907 | 2026-06-16 | 876216000790   | 876216000790   | HBL = MBL
+    2609719 | 2026-06-12 | LNBDXB26044462 | LNBDXB26044462 | HBL = MBL
+    2609592 | 2026-06-10 | CULVTAO2607135 | CULVTAO2607135 | HBL = MBL
+    2608451 | 2026-05-22 | 176-29589700   | 176-29589700   | HBL = MBL
+    2607688 | 2026-05-11 | 757316000172   | 757316000172   | HBL = MBL
+
+6b: HblEqualsMbl 1,450 of TotalDxbHbls 2,140  (68%)</div>
+            <p>
+              Every one of this consignee's six previous jobs has <strong>HBL No = MBL No</strong> &mdash; this job
+              is the only deviation. Branch-wide, 68% of DXB import HBLs follow the same convention (direct
+              shipments). The correct value for job 2609977 is therefore <strong>MEDUYF745606</strong> &mdash; the
+              operator should have repeated the MBL number into the HBL No field but typed the vessel name instead.
+            </p>
+          </div>
+        </div>
+
       </div>
 
       <div class="sec">
         <div class="sec-title">Root Cause</div>
         <div class="alert alert-danger">
           <strong>ff.BBooking_Import_HBL &mdash; HBLID 89323: HBLNo = 'MSC EMANUELA' (the vessel's name)</strong>
-          Data entry error at booking creation. The vessel assigned to the booking (VesselID 5438) is named
-          MSC EMANUELA, and that name was typed into the HBL No field on the Import Booking screen.
+          Data entry error at booking creation. The job is a direct shipment (no origin agent, so no separately
+          issued house BL); per branch convention the MBL number <strong>MEDUYF745606</strong> should have been
+          repeated into the HBL No field &mdash; as on all six of this consignee's previous jobs &mdash; but the
+          operator typed the booking's vessel name (VesselID 5438 = MSC EMANUELA) instead.
           <code>ff.Update_BBooking_Import</code> saves the screen payload verbatim with no validation on
           <code>HBLNo</code>, and the Invoice page displays the stored value as-is. Nothing is wrong with any
           procedure &mdash; the database value itself is wrong.
@@ -310,9 +410,9 @@ CopiedFromID NULL | CopiedBy 2752 | Copied 2026-06-17 19:19:10</div>
       <div class="sec">
         <div class="sec-title">Solution</div>
         <p>
-          The correct HBL number exists nowhere in the system (<code>CustomerRefNo</code> and <code>SAPNo</code>
-          are blank on the HBL record), so it must be supplied by the Dubai branch from the origin agent's
-          documents. Once received, the fix is a one-row update. Invoices reference the HBL by
+          The correct value is <strong>MEDUYF745606</strong> (the MBL number), established from the branch
+          convention in Step 6 &mdash; direct shipment, no origin-agent HBL, and 6 of 6 previous jobs for this
+          consignee use HBL&nbsp;=&nbsp;MBL. The fix is a one-row update. Invoices reference the HBL by
           <code>HBLID</code>, so no invoice rows need touching &mdash; the Invoice page reflects the correction
           immediately.
         </p>
@@ -321,9 +421,9 @@ SELECT HBLID, BookingID, HBLNo, HBLDate
 FROM ff.BBooking_Import_HBL
 WHERE HBLID = 89323;
 
--- FIX (expect: 1 row affected; HBLNo is varchar(30))
+-- FIX (expect: 1 row affected)
 UPDATE ff.BBooking_Import_HBL
-SET HBLNo = '&lt;CORRECT_HBL_NO&gt;'
+SET HBLNo = 'MEDUYF745606'
 WHERE HBLID = 89323 AND HBLNo = 'MSC EMANUELA';
 
 -- REVERT (if ever needed)
@@ -331,10 +431,14 @@ UPDATE ff.BBooking_Import_HBL
 SET HBLNo = 'MSC EMANUELA'
 WHERE HBLID = 89323;</pre>
         <div class="alert alert-info">
-          <strong>Fix pending the correct HBL number from the Dubai branch</strong>
-          Requested the real HBL No for job 2609977 / MBL MEDUYF745606 from the branch. The
+          <strong>Fix pending Dubai branch confirmation</strong>
+          The value MEDUYF745606 is inferred from the branch's own HBL&nbsp;=&nbsp;MBL convention; only the branch
+          knows whether a paper HBL was actually issued for this shipment. Message sent to the branch:
+          <em>&ldquo;Job 2609977 is a direct shipment with no origin agent HBL on file; all previous shipments for
+          Arabian Equipment Rental use HBL&nbsp;=&nbsp;MBL. Confirm we set HBL No to MEDUYF745606.&rdquo;</em>
+          On confirmation, apply the fix above and verify on the Invoice page. The
           <code>AND HBLNo = 'MSC EMANUELA'</code> guard makes the update a no-op if the row has already been
-          corrected in the meantime. Verify on the Invoice page after applying.
+          corrected in the meantime.
         </div>
       </div>
 
@@ -391,6 +495,12 @@ WHERE HBLID = 89323;</pre>
           <td><code>ff.BBooking_Import_HBL</code></td>
           <td>By design &mdash; attribution of HBL data entry has to come from the booking header's
               <code>CreatedBy</code>/<code>Created</code>.</td>
+        </tr>
+        <tr>
+          <td>1,450 of 2,140 DXB import HBLs have HBL No identical to the MBL No</td>
+          <td><code>ff.BBooking_Import_HBL</code> / <code>ff.BBooking_Import</code></td>
+          <td>Expected, not duplicated data &mdash; on direct shipments (no origin forwarder / no house BL) the
+              branch convention is to repeat the MBL number in the HBL No field.</td>
         </tr>
       </tbody>
     </table>
