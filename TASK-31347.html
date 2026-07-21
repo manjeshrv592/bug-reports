@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TASK-31347 &mdash; Debit/Credit Note</title>
+  <style>
+    html { scroll-behavior: smooth; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 13px;
+      color: #1a1a1a;
+      background: #fff;
+      padding: 40px;
+      max-width: 940px;
+      margin: auto;
+    }
+
+    .header { background: #1a3c6e; color: #fff; padding: 24px 28px; border-radius: 6px; margin-bottom: 28px; }
+    .header h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .header p { font-size: 12px; color: #b0c4de; }
+
+    .meta-box {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #f4f7fb;
+      border: 1px solid #d0dbe8;
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin-bottom: 32px;
+    }
+    .meta-box .item label { font-size: 11px; color: #6b7a90; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px; }
+    .meta-box .item span { font-weight: 600; color: #1a1a1a; }
+
+    .page-index { background: #f4f7fb; border: 1px solid #d0dbe8; border-radius: 6px; padding: 14px 20px; margin-bottom: 28px; }
+    .page-index p { font-size: 11px; font-weight: 700; color: #6b7a90; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .page-index ol { margin: 0; padding-left: 18px; }
+    .page-index li { margin-bottom: 4px; }
+    .page-index a { font-size: 13px; color: #1a3c6e; text-decoration: none; }
+    .page-index a:hover { text-decoration: underline; }
+
+    .issue-block { border: 1px solid #d0dbe8; border-radius: 8px; margin-bottom: 36px; overflow: hidden; }
+    .issue-header { background: #1a3c6e; color: #fff; padding: 14px 20px; }
+    .issue-header h2 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .issue-header p { font-size: 12px; color: #b0c4de; }
+    .issue-body { padding: 20px; }
+
+    .takeaway { background: #f0f4ff; border-left: 4px solid #1a3c6e; border-radius: 0 5px 5px 0; padding: 11px 16px; margin-bottom: 18px; font-size: 12.5px; color: #1a1a1a; line-height: 1.6; }
+    .takeaway strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7a90; margin-bottom: 4px; }
+
+    .sec { margin-bottom: 22px; }
+    .sec-title { font-size: 13px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px; }
+    .sec p { line-height: 1.7; color: #333; margin-bottom: 8px; }
+
+    .step { border: 1px solid #e0e7ef; border-radius: 6px; margin-bottom: 14px; overflow: hidden; }
+    .step-header { background: #e8eef7; color: #1a3c6e; padding: 8px 14px; font-weight: 600; font-size: 12.5px; }
+    .step-body { padding: 14px 16px; }
+    .step-body p { margin-bottom: 8px; line-height: 1.6; color: #333; }
+
+    pre {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 14px 16px;
+      border-radius: 5px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin: 10px 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .result-box {
+      background: #f0f4f0;
+      border: 1px solid #b2d0b2;
+      border-radius: 5px;
+      padding: 10px 14px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      color: #1a1a1a;
+      margin: 10px 0;
+      white-space: pre-wrap;
+    }
+
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+    th { background: #1a3c6e; color: #fff; padding: 8px 10px; text-align: left; font-weight: 600; }
+    td { padding: 7px 10px; border-bottom: 1px solid #e0e7ef; vertical-align: top; }
+    tr:nth-child(even) td { background: #f4f7fb; }
+    .highlight-row td { background: #fdecea !important; }
+    .pass { color: #1a7a1a; font-weight: 700; }
+    .fail { color: #c0392b; font-weight: 700; }
+
+    .alert { border-radius: 5px; padding: 12px 16px; margin: 12px 0; font-size: 12.5px; line-height: 1.6; }
+    .alert-danger  { background: #fdecea; border-left: 4px solid #c0392b; color: #7b1e1e; }
+    .alert-warning { background: #fff8e1; border-left: 4px solid #f39c12; color: #7a5c00; }
+    .alert-info    { background: #e8f4fb; border-left: 4px solid #2980b9; color: #1a4a6e; }
+    .alert strong  { display: block; margin-bottom: 4px; }
+
+    .back-link { display: inline-block; margin-bottom: 20px; font-size: 12px; color: #1a3c6e; text-decoration: none; }
+    .back-link:hover { text-decoration: underline; }
+
+    .footer { margin-top: 36px; border-top: 1px solid #d0dbe8; padding-top: 14px; font-size: 11px; color: #888; display: flex; justify-content: space-between; }
+
+    @media print {
+      body { padding: 20px; }
+      .issue-block { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-link">&larr; Back to Bug Reports Index</a>
+
+  <div class="header">
+    <h1>TASK-31347 &mdash; Unable to Raise CN, Customer Not Fetching on Debit/Credit Note Page</h1>
+    <p>System: BLISS &nbsp;|&nbsp; Module: Invoice &gt; Invoice &gt; Debit/Credit Note &nbsp;|&nbsp; Date: 21 July 2026</p>
+  </div>
+
+  <div class="meta-box">
+    <div class="item"><label>Task</label><span>31347</span></div>
+    <div class="item"><label>Module</label><span>Debit/Credit Note</span></div>
+    <div class="item"><label>Date Reported</label><span>21 Jul 2026</span></div>
+    <div class="item"><label>Issues in Task</label><span>1</span></div>
+  </div>
+
+  <div class="page-index">
+    <p>Issues in this report</p>
+    <ol>
+      <li><a href="#issue-1">Customer "INTERIOR THREE SIXTY LLC" not fetching in the Debit/Credit Note customer field, blocking the CN</a></li>
+    </ol>
+  </div>
+
+
+  <!-- ===========================
+       ISSUE 1
+       =========================== -->
+  <div class="issue-block" id="issue-1">
+    <div class="issue-header">
+      <h2>Issue 1 &mdash; Customer Not Fetching on Debit/Credit Note Page</h2>
+      <p>Customer: INTERIOR THREE SIXTY LLC &nbsp;|&nbsp; Branch / Invoice / Job: not supplied in ticket (CN request attached as a file only)</p>
+    </div>
+    <div class="issue-body">
+
+      <div class="takeaway">
+        <strong>Key Takeaway</strong>
+        The Debit/Credit Note customer autocomplete is gated on the <b>ops</b> customer's active flag
+        (<code>masterOps.Customer.isActive = 1</code>), not on the finance ledger. A customer that has a
+        perfectly healthy, active ledger and open invoices can still vanish from the CN screen if the ops
+        record has been deactivated. When a customer "won't fetch" for a CN/receipt, check
+        <code>masterOps.Customer.isActive</code> first, before looking at the ledger side.
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Problem</div>
+        <p>
+          On <b>Invoice &gt; Invoice &gt; Debit/Credit Note</b>, the user could not raise a Credit Note
+          for customer <b>INTERIOR THREE SIXTY LLC</b>. Typing the customer name into the <b>Customer Name</b>
+          field returned no match, so the form could not resolve the customer and the CN could not be created.
+        </p>
+        <p>
+          No job number, invoice number, or branch was supplied in the ticket, the CN request was attached as
+          a file rather than pasted, so the starting point was the customer name alone.
+        </p>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Investigation</div>
+
+        <div class="step">
+          <div class="step-header">Step 1 &mdash; Identify what feeds the CN "Customer Name" field</div>
+          <div class="step-body">
+            <p>
+              In the CN component (<code>credit-note.component.ts</code>) the customer autocomplete is wired to
+              <code>CustomerNameAutoCompleteUrl = "/Receipt/Get_Customer_Debtor"</code>, which the BSSApi
+              (<code>FIN_ReceiptController</code>) maps to stored procedure <code>Fin.Get_Customer_Debtor</code>
+              (<code>@Search</code>, <code>@Branch</code>). Reading the SP body:
+            </p>
+            <pre>select l.LedgerName+' - '+isnull(mc.CuPrintName,'')+' - '+isnull(mc.BranchCode,'') Label,
+       l.LedgerID Value, fc.CustomerID, l.LedgerID CustomerLedgerID
+from fin.LedgerMaster l
+left join fin.FCustomer fc        on fc.LedgerID = l.LedgerID
+left join masterops.Customer mc   on mc.CustomerId = fc.OpsID
+left join ff.Branch br            on br.BranchCode = mc.BranchCode
+where l.ParentID = 27                        -- SUNDRY DEBTORS
+  and l.LedgerName like '%'+@Search+'%'       -- searches LEDGER name, not CuName
+  and mc.isActive = 1 and fc.isActive = 1     -- both ops + finance must be active</pre>
+            <p>
+              Two things stand out: the search is on <code>LedgerMaster.LedgerName</code> (not the ops
+              <code>CuName</code>), and a row is dropped unless the ledger sits under <code>ParentID = 27</code>
+              (Sundry Debtors) <b>and</b> both <code>mc.isActive = 1</code> and <code>fc.isActive = 1</code>.
+              The <code>@Branch</code> / company filter is commented out, so branch is not what excludes a row here.
+              The candidate reasons the customer is missing are therefore: misnamed/absent ledger, wrong
+              <code>ParentID</code>, or one of the two active flags being 0.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 2 &mdash; Trace the customer through the whole chain with no filters</div>
+          <div class="step-body">
+            <p>
+              Starting from the ops customer and following the exact joins the SP uses, but without any of the
+              WHERE filters, so it is visible which single condition drops the row. A parallel search on the
+              ledger side rules out a name-spelling mismatch (the field the autocomplete actually matches on).
+            </p>
+            <pre>-- 1: trace INTERIOR THREE SIXTY LLC through the Get_Customer_Debtor chain
+SELECT  mc.CustomerId, mc.CuName, mc.CuPrintName, mc.BranchCode AS Cust_BranchCode,
+        mc.isActive AS Cust_isActive,
+        fc.CustomerID AS FCustomerID, fc.OpsID, fc.LedgerID, fc.isActive AS FCust_isActive,
+        l.LedgerID AS Ledger_LedgerID, l.LedgerName, l.ParentID AS Ledger_ParentID, l.isActive AS Ledger_isActive
+FROM masterOps.Customer mc
+LEFT JOIN fin.FCustomer   fc ON fc.OpsID   = mc.CustomerId
+LEFT JOIN fin.LedgerMaster l ON l.LedgerID = fc.LedgerID
+WHERE mc.CuName LIKE '%INTERIOR THREE SIXTY%'
+   OR mc.CuPrintName LIKE '%INTERIOR THREE SIXTY%';
+
+-- 1b: does any SUNDRY DEBTOR ledger name contain the string the user types?
+SELECT l.LedgerID, l.LedgerName, l.ParentID, l.isActive
+FROM fin.LedgerMaster l
+WHERE l.LedgerName LIKE '%INTERIOR%';</pre>
+            <div class="result-box">Query 1 (one row):
+CustomerId = 50029 | CuName = INTERIOR THREE SIXTY LLC | CuPrintName = INTERIOR THREE
+BranchCode = Y | Cust_isActive = 0   &lt;-- INACTIVE
+FCustomerID = 11503 | OpsID = 50029 | LedgerID = 16492 | FCust_isActive = 1
+Ledger_LedgerID = 16492 | LedgerName = INTERIOR THREE SIXTY LLC | ParentID = 27 | Ledger_isActive = 1
+
+Query 1b (ledger 16492 present, correct name/parent/active):
+16492  INTERIOR THREE SIXTY LLC   27   1   (only INTERIOR THREE SIXTY ledger; others are unrelated names)</div>
+            <p>
+              The entire chain is intact: the ledger exists (16492) under <code>ParentID = 27</code> and is
+              active, the FCustomer (11503) links it to the ops customer and is active, and the ledger name
+              matches the search string <b>exactly</b>. The only SP condition that fails is
+              <code>mc.isActive = 1</code>, the ops customer row (CustomerId <b>50029</b>, branch <b>Y</b>) has
+              <code>isActive = 0</code>. That single flag is what excludes it from the autocomplete.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 3 &mdash; Confirm the deactivation context and the invoice the CN targets</div>
+          <div class="step-body">
+            <p>
+              Before touching the flag, capture when/who deactivated the customer, and confirm there is a
+              genuine open invoice the CN is meant to credit (which also recovers the invoice number the ticket
+              never supplied).
+            </p>
+            <pre>-- 3a: deactivation audit
+SELECT CustomerId, CuName, CuPrintName, BranchCode, isActive,
+       CreatedBy, Created, UpdatedBy, Updated
+FROM masterOps.Customer WHERE CustomerId = 50029;
+
+-- 3b: outstanding sales invoices for this customer (FCustomerID 11503)
+SELECT ii.InvoiceID, i.InvoiceNumber, i.InvoiceDate, i.Branch, ii.FCustomerID,
+       round(ii.InvAmount,0) InvAmount, round(ii.Received,0) Received, isNull(ii.CreditAmt,0) CreditAmt,
+       round(ii.InvAmount,0)-round(ii.Received,0)-round(isNull(ii.CreditAmt,0),0) Outstanding, ii.isActive
+FROM ff.Invoice_Inventory ii
+LEFT JOIN ff.Invoice i ON i.InvoiceId = ii.InvoiceID
+WHERE ii.FCustomerID IN (11503, 50029)
+ORDER BY i.InvoiceDate DESC;</pre>
+            <div class="result-box">3a: CustomerId 50029  Created 2026-03-24 by user 2415  |  Updated (deactivated, isActive=0) 2026-03-25 13:59 by user 111
+3b: InvoiceID 228962 | InvoiceNumber 26700996 | InvoiceDate 2026-03-23 | Branch Y | FCustomerID 11503
+    InvAmount 24,609.00 | Received 0.00 | CreditAmt 0.00 | Outstanding 24,609.00 | isActive 1</div>
+            <p>
+              The customer was created on 24 Mar 2026 and deactivated the very next day (25 Mar 2026) by user 111.
+              There is exactly one open invoice, <b>26700996</b>, fully outstanding at <b>24,609.00</b>, tied to
+              this customer's FCustomerID (11503), a legitimate reason to raise the CN. Step 2 already established
+              there is no other ops customer or ledger named "INTERIOR THREE SIXTY", so this is not a surviving
+              duplicate holding the invoice; 50029 / 11503 is the single record for this customer.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Root Cause</div>
+        <div class="alert alert-danger">
+          <strong>masterOps.Customer, CustomerId 50029 (INTERIOR THREE SIXTY LLC, branch Y) &mdash; isActive = 0</strong>
+          The customer is deactivated on the ops side. <code>Fin.Get_Customer_Debtor</code>, which powers the
+          Debit/Credit Note "Customer Name" autocomplete, requires <code>mc.isActive = 1</code>, so the
+          deactivated customer never appears and the CN form cannot resolve it. The finance ledger (16492,
+          ParentID 27, active) and FCustomer (11503, active) are fully intact, the ops active flag is the only
+          blocker.
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Confirmation Queries</div>
+        <p>The row that proved the root cause, filtered to the failing condition alone:</p>
+        <pre>SELECT CustomerId, CuName, BranchCode, isActive
+FROM masterOps.Customer
+WHERE CustomerId = 50029;
+-- returns: 50029 | INTERIOR THREE SIXTY LLC | Y | 0   (isActive = 0)</pre>
+        <p>
+          Re-running <code>Fin.Get_Customer_Debtor</code> with <code>@Search = 'INTERIOR'</code> returns the
+          customer only after <code>isActive</code> is set back to 1.
+        </p>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Solution</div>
+        <p>
+          Reactivate the ops customer so <code>Fin.Get_Customer_Debtor</code> returns it. Single row, fully
+          reversible. Preview first, apply, then verify on the CN screen.
+        </p>
+
+        <div class="alert alert-info">
+          <strong>Status at time of writing</strong>
+          The fix below is documented as <b>to apply and verify</b>, it had not yet been run against the
+          database or confirmed on the Debit/Credit Note screen when this report was written. Once the
+          <code>UPDATE</code> is applied and the customer is confirmed to resolve on the CN page with invoice
+          26700996 selectable, this note should be updated to reflect the fix as applied &amp; verified.
+        </div>
+        <pre>-- Preview (before) — expect 1 row, isActive = 0
+SELECT CustomerId, CuName, BranchCode, isActive, UpdatedBy, Updated
+FROM masterOps.Customer
+WHERE CustomerId = 50029;
+
+-- Fix — expect 1 row affected
+UPDATE masterOps.Customer
+SET isActive = 1
+WHERE CustomerId = 50029;   -- reactivate INTERIOR THREE SIXTY LLC (branch Y)</pre>
+        <p>Verify in the frontend: Invoice &gt; Invoice &gt; Debit/Credit Note (DrCr = Credit) &rarr; type
+          "INTERIOR" in Customer Name &rarr; "INTERIOR THREE SIXTY LLC - INTERIOR THREE - Y" appears &rarr;
+          select it, then in the grid's Credit Invoice No search <code>26700996</code> &rarr; it lists with
+          24,609 outstanding, confirming the CN can be raised end to end.</p>
+
+        <div class="alert alert-warning">
+          <strong>Revert query (if the reactivation needs to be undone)</strong>
+<pre style="margin:6px 0 0 0; background:#1e1e2e;">UPDATE masterOps.Customer
+SET isActive = 0
+WHERE CustomerId = 50029;</pre>
+        </div>
+
+        <div class="alert alert-info">
+          <strong>Confirm before applying</strong>
+          The deactivation was a deliberate action by user 111 on 25 Mar 2026, one day after the customer was
+          created, a pattern that can indicate an intended duplicate cleanup. Since there is a live open invoice
+          (26700996) requiring a CN and no surviving duplicate was found, reactivation is the correct fix, but it
+          is worth a quick confirmation with the owner of user 111 that the deactivation was accidental / that
+          reactivating for CN purposes is acceptable.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- Recurrence Risk — always include this section -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Recurrence Risk</div>
+    <table>
+      <thead>
+        <tr><th>Issue</th><th>Risk</th><th>Will It Recur?</th><th>Action Required Until Permanent Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Deactivated ops customer excluded from Debit/Credit Note (and Receipt) customer autocomplete</td>
+          <td style="color: #f39c12; font-weight: 700;">Medium</td>
+          <td>Yes &mdash; any customer with <code>masterOps.Customer.isActive = 0</code> that still has open
+            invoices will hit the same wall. This is expected SP behaviour (inactive customers are meant to be
+            hidden), so it recurs whenever a customer is deactivated prematurely / by mistake while receivables
+            remain.</td>
+          <td>When a customer "won't fetch" for a CN/receipt, check <code>masterOps.Customer.isActive</code> for
+            that CustomerId. If it is 0 and there is a legitimate open invoice, confirm the deactivation was not
+            intentional, then reactivate (<code>isActive = 1</code>). Consider not deactivating customers that
+            still carry outstanding invoices.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Tables & Objects Involved -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Tables &amp; Objects Involved</div>
+    <table>
+      <thead>
+        <tr><th>Object</th><th>Type</th><th>Role</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Fin.Get_Customer_Debtor</td><td>SP (BSS)</td><td>Powers the CN "Customer Name" autocomplete (<code>/Receipt/Get_Customer_Debtor</code>). Filters <code>l.ParentID=27</code>, <code>mc.isActive=1</code>, <code>fc.isActive=1</code>; searches on <code>LedgerName</code>.</td></tr>
+        <tr><td>masterOps.Customer</td><td>Table</td><td>Ops customer master. CustomerId 50029, the <code>isActive=0</code> flag here is the root cause.</td></tr>
+        <tr><td>fin.FCustomer</td><td>Table</td><td>Finance customer, links ops customer (<code>OpsID</code>) to a ledger (<code>LedgerID</code>). Row 11503, active.</td></tr>
+        <tr><td>fin.LedgerMaster</td><td>Table</td><td>Ledger master. Ledger 16492 "INTERIOR THREE SIXTY LLC", ParentID 27 (Sundry Debtors), active.</td></tr>
+        <tr><td>ff.Invoice_Inventory / ff.Invoice</td><td>Table</td><td>Open invoice 26700996 (InvoiceID 228962), 24,609 outstanding, the invoice the CN targets.</td></tr>
+        <tr><td>credit-note.component.ts</td><td>Frontend</td><td>Debit/Credit Note screen; binds the customer field to <code>/Receipt/Get_Customer_Debtor</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <span>BLISS &mdash; Bug Report &nbsp;|&nbsp; TASK-31347 &nbsp;|&nbsp; Debit/Credit Note</span>
+    <span>21 Jul 2026</span>
+  </div>
+
+</body>
+</html>

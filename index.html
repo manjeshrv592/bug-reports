@@ -140,6 +140,17 @@
         file: 'TASK-31287.html',
         summary: 'HBL No displayed as "MSC EMANUELA" — the booking\'s vessel name was typed into the HBL No field at data entry (HBLNo is free-text, saved verbatim). Direct shipment with no origin-agent HBL; branch convention is HBL = MBL (6/6 prior jobs for this consignee, 68% of DXB imports), so correct value is the MBL MEDUYF745606. One-row fix drafted, pending branch confirmation.'
       },
+      {
+        task: '31347',
+        title: 'Unable to Raise CN — Customer Not Fetching on Debit/Credit Note Page',
+        module: 'Invoice / Debit-Credit Note',
+        branch: 'New Jersey (Y)',
+        jobs: '—',
+        invoices: '26700996',
+        date: '21 Jul 2026',
+        file: 'TASK-31347.html',
+        summary: 'Customer "INTERIOR THREE SIXTY LLC" would not appear in the Debit/Credit Note customer autocomplete. The finance ledger and FCustomer were both intact and active — only masterOps.Customer.isActive was 0 (deactivated a day after creation). Fin.Get_Customer_Debtor filters mc.isActive=1, so the customer was excluded, blocking the CN against open invoice 26700996 (24,609 outstanding). Fix: reactivate CustomerId 50029 (reversible).'
+      },
       // Add new reports here
     ];
 
