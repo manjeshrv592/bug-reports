@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TASK-31362 &mdash; Payment (Accounts Payable)</title>
+  <style>
+    html { scroll-behavior: smooth; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 13px;
+      color: #1a1a1a;
+      background: #fff;
+      padding: 40px;
+      max-width: 940px;
+      margin: auto;
+    }
+
+    .header { background: #1a3c6e; color: #fff; padding: 24px 28px; border-radius: 6px; margin-bottom: 28px; }
+    .header h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .header p { font-size: 12px; color: #b0c4de; }
+
+    .meta-box {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #f4f7fb;
+      border: 1px solid #d0dbe8;
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin-bottom: 32px;
+    }
+    .meta-box .item label { font-size: 11px; color: #6b7a90; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px; }
+    .meta-box .item span { font-weight: 600; color: #1a1a1a; }
+
+    .page-index { background: #f4f7fb; border: 1px solid #d0dbe8; border-radius: 6px; padding: 14px 20px; margin-bottom: 28px; }
+    .page-index p { font-size: 11px; font-weight: 700; color: #6b7a90; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .page-index ol { margin: 0; padding-left: 18px; }
+    .page-index li { margin-bottom: 4px; }
+    .page-index a { font-size: 13px; color: #1a3c6e; text-decoration: none; }
+    .page-index a:hover { text-decoration: underline; }
+
+    .issue-block { border: 1px solid #d0dbe8; border-radius: 8px; margin-bottom: 36px; overflow: hidden; }
+    .issue-header { background: #1a3c6e; color: #fff; padding: 14px 20px; }
+    .issue-header h2 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .issue-header p { font-size: 12px; color: #b0c4de; }
+    .issue-body { padding: 20px; }
+
+    .takeaway { background: #f0f4ff; border-left: 4px solid #1a3c6e; border-radius: 0 5px 5px 0; padding: 11px 16px; margin-bottom: 18px; font-size: 12.5px; color: #1a1a1a; line-height: 1.6; }
+    .takeaway strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7a90; margin-bottom: 4px; }
+
+    .sec { margin-bottom: 22px; }
+    .sec-title { font-size: 13px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px; }
+    .sec p { line-height: 1.7; color: #333; margin-bottom: 8px; }
+
+    .step { border: 1px solid #e0e7ef; border-radius: 6px; margin-bottom: 14px; overflow: hidden; }
+    .step-header { background: #e8eef7; color: #1a3c6e; padding: 8px 14px; font-weight: 600; font-size: 12.5px; }
+    .step-body { padding: 14px 16px; }
+    .step-body p { margin-bottom: 8px; line-height: 1.6; color: #333; }
+
+    pre {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 14px 16px;
+      border-radius: 5px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin: 10px 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .result-box {
+      background: #f0f4f0;
+      border: 1px solid #b2d0b2;
+      border-radius: 5px;
+      padding: 10px 14px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      color: #1a1a1a;
+      margin: 10px 0;
+      white-space: pre-wrap;
+    }
+
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+    th { background: #1a3c6e; color: #fff; padding: 8px 10px; text-align: left; font-weight: 600; }
+    td { padding: 7px 10px; border-bottom: 1px solid #e0e7ef; vertical-align: top; }
+    tr:nth-child(even) td { background: #f4f7fb; }
+    .highlight-row td { background: #fdecea !important; }
+    .pass { color: #1a7a1a; font-weight: 700; }
+    .fail { color: #c0392b; font-weight: 700; }
+
+    .alert { border-radius: 5px; padding: 12px 16px; margin: 12px 0; font-size: 12.5px; line-height: 1.6; }
+    .alert-danger  { background: #fdecea; border-left: 4px solid #c0392b; color: #7b1e1e; }
+    .alert-warning { background: #fff8e1; border-left: 4px solid #f39c12; color: #7a5c00; }
+    .alert-info    { background: #e8f4fb; border-left: 4px solid #2980b9; color: #1a4a6e; }
+    .alert strong  { display: block; margin-bottom: 4px; }
+
+    .back-link { display: inline-block; margin-bottom: 20px; font-size: 12px; color: #1a3c6e; text-decoration: none; }
+    .back-link:hover { text-decoration: underline; }
+
+    .footer { margin-top: 36px; border-top: 1px solid #d0dbe8; padding-top: 14px; font-size: 11px; color: #888; display: flex; justify-content: space-between; }
+
+    @media print {
+      body { padding: 20px; }
+      .issue-block { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-link">&larr; Back to Bug Reports Index</a>
+
+  <div class="header">
+    <h1>TASK-31362 &mdash; Vendor Invoice Not Appearing on Payment Screen</h1>
+    <p>System: BLISS &nbsp;|&nbsp; Module: Payment (Accounts Payable) &nbsp;|&nbsp; Date: 22 July 2026</p>
+  </div>
+
+  <div class="meta-box">
+    <div class="item"><label>Task</label><span>31362</span></div>
+    <div class="item"><label>Module</label><span>Transaction &rsaquo; Payment</span></div>
+    <div class="item"><label>Date Reported</label><span>22 Jul 2026</span></div>
+    <div class="item"><label>Issues in Task</label><span>1</span></div>
+  </div>
+
+  <div class="page-index">
+    <p>Issues in this report</p>
+    <ol>
+      <li><a href="#issue-1">Vendor invoice AHMAE/0050/26-27 (NEW GLOBE LOGISTIK LLP) not selectable on the Payment screen</a></li>
+    </ol>
+  </div>
+
+
+  <!-- ===========================
+       ISSUE 1
+       =========================== -->
+  <div class="issue-block" id="issue-1">
+    <div class="issue-header">
+      <h2>Issue 1 &mdash; Vendor invoice does not appear on the Payment screen</h2>
+      <p>Vendor: NEW GLOBE LOGISTIK LLP &nbsp;|&nbsp; Vendor Invoice: AHMAE/0050/26-27 &nbsp;|&nbsp; Type: Data Change Request</p>
+    </div>
+    <div class="issue-body">
+
+      <div class="takeaway">
+        <strong>Key Takeaway</strong>
+        When a vendor invoice will not show on the Payment screen even though the vendor exists and is
+        correctly linked, check the <em>party on the job cost line</em>, not the vendor master. The Payment
+        screen matches invoices on <code>BB_Cost.PartyID = FVendor.OpsID</code>. A duplicate
+        <code>masterOps.Customer</code> record (two ops IDs for the same firm, only one wired to a finance
+        vendor) will strand every invoice that happens to be booked against the un-linked twin.
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Problem</div>
+        <p>
+          Vendor invoice <strong>AHMAE/0050/26-27</strong> for vendor <strong>NEW GLOBE LOGISTIK LLP</strong>
+          does not appear on the <strong>Transaction &rsaquo; Transaction &rsaquo; Payment</strong> screen, so it
+          cannot be selected or paid. The task was raised as a Data Change Request with the subject note
+          &ldquo;VENDOR CODE NOT SHOW,&rdquo; suggesting the vendor code / linkage as the suspect. Branch and
+          BLISS-side job were not supplied and had to be traced from the vendor and vendor-invoice number.
+        </p>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Investigation</div>
+
+        <div class="step">
+          <div class="step-header">Step 1 &mdash; Identify the SP that powers the Payment screen's invoice list</div>
+          <div class="step-body">
+            <p>
+              The Payment screen first loads the vendor via <code>Fin.Get_Vendor_Creditor</code> (creditor
+              ledgers under <code>ParentID=52</code>, returning each vendor's <code>FVendor.OpsID</code>), then
+              loads that vendor's outstanding invoices via
+              <code>Fin.Search_Purchase_Invoice_Inventory_By_VendorID</code>. The key mechanic in that SP is the
+              vendor gate &mdash; the invoice is matched to the vendor through the <strong>cost line's
+              PartyID</strong>, not the invoice header:</p>
+            <pre>inner join @tblVendor tv  on tv.VendorID = bc.PartyID   -- @VendorID = FVendor.OpsID
+left  join fin.FVendor v  on v.OpsID    = bc.PartyID</pre>
+            <p>
+              So an invoice appears only when a cost line exists with
+              <code>VendorInvNo = InvoiceNo</code>, <code>CostID = detail.CostID</code>, and
+              <strong><code>PartyID = the selected vendor's OpsID</code></strong>. Any mismatch on
+              <code>PartyID</code> silently drops the row via the inner join.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 2 &mdash; Locate the vendor invoice header</div>
+          <div class="step-body">
+            <p>Found the purchase invoice in <code>ff.Tally_Invoice_Head_Pur</code>:</p>
+            <pre>SELECT TallyPurID, Branch, InvoiceNo, InvDate, JobID, TDSAmount
+FROM ff.Tally_Invoice_Head_Pur
+WHERE InvoiceNo LIKE '%AHMAE/0050/26-27%';</pre>
+            <div class="result-box">TallyPurID  Branch  InvoiceNo          InvDate      JobID   TDSAmount
+373774      Q       AHMAE/0050/26-27   2026-06-16   82438   8738.00</div>
+            <p>
+              The invoice exists, on branch <strong>Q</strong> and job <strong>82438</strong>. So the invoice
+              is booked &mdash; the problem is that the Payment screen is filtering it out, not that it is
+              missing.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 3 &mdash; Verify the vendor master and its ops linkage</div>
+          <div class="step-body">
+            <p>
+              Because the subject pointed at &ldquo;vendor code,&rdquo; checked whether NEW GLOBE LOGISTIK LLP
+              exists as a creditor ledger and whether it is linked to a finance vendor with a valid
+              <code>OpsID</code>:</p>
+            <pre>SELECT l.LedgerID, l.LedgerName, l.ParentID, l.isActive,
+       v.CustomerID AS FVendor_CustomerID, v.OpsID, v.LedgerID, v.isActive
+FROM fin.LedgerMaster l
+LEFT JOIN fin.FVendor v ON v.LedgerID = l.LedgerID
+WHERE l.LedgerName LIKE '%NEW GLOBE LOGISTIK%';</pre>
+            <div class="result-box">LedgerID  LedgerName              ParentID  Active  FVendor_Cust  OpsID  FV_Ledger  FV_Active
+12104     NEW GLOBE LOGISTIK LLP  52        1       40210         43472  12104      1</div>
+            <p>
+              The vendor master is <strong>fully intact</strong> &mdash; active Sundry-Creditor ledger 12104,
+              finance vendor 40210, linked to <code>OpsID 43472</code>. So this is <em>not</em> an unlinked /
+              missing vendor code. The Payment screen would pass <code>@VendorID = 43472</code> cleanly; the
+              invoice must be dropped deeper inside the SP.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 4 &mdash; Get the invoice detail (segment) and rule out the branch gate</div>
+          <div class="step-body">
+            <p>The invoice detail gives the segment (which decides the cost table) and the cost IDs:</p>
+            <pre>SELECT TallyPurID, CostID, Segment, Amount
+FROM ff.Tally_Invoice_Detail_Pur
+WHERE TallyPurID = 373774;</pre>
+            <div class="result-box">CostID   Segment   Amount
+0        E8        39312.72
+0        E8        39312.72
+375636   E8        225.00
+375637   E8        454.00
+375638   E8        685.00
+375641   E8        435444.00</div>
+            <p>
+              Segment <strong>E8 = Export</strong>, so the invoice routes through the <code>ff.BB_Cost</code>
+              union of the SP, matching on cost IDs <strong>375636 / 375637 / 375638 / 375641</strong> (the two
+              <code>CostID 0</code> rows are GST/rounding lines and never match). The SP's branch gate joins only
+              <code>masterCom.OrganizationUnit</code> rows with <code>CompanyId=1</code> &mdash; confirmed branch
+              <strong>Q = Ahmedabad</strong>, <code>CompanyId=1</code>, INR, so the branch gate is <span class="pass">not</span>
+              the cause.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 5 &mdash; Inspect the actual cost lines &mdash; the mismatch appears</div>
+          <div class="step-body">
+            <p>Looked directly at the export cost lines for this invoice:</p>
+            <pre>SELECT CostID, JobID, VendorInvNo, PartyID
+FROM ff.BB_Cost
+WHERE JobID = 82438
+  AND VendorInvNo LIKE '%AHMAE/0050/26-27%';</pre>
+            <div class="result-box">CostID   JobID   VendorInvNo         PartyID
+375636   82438   AHMAE/0050/26-27    44581
+375637   82438   AHMAE/0050/26-27    44581
+375638   82438   AHMAE/0050/26-27    44581
+375641   82438   AHMAE/0050/26-27    44581</div>
+            <p>
+              The cost lines match the invoice perfectly on <code>VendorInvNo</code> and <code>CostID</code> &mdash;
+              but they carry <strong><code>PartyID = 44581</code></strong>, while the vendor is linked to
+              <strong><code>OpsID = 43472</code></strong>. Because the SP does
+              <code>inner join @tblVendor on VendorID = bc.PartyID</code> with <code>@VendorID = 43472</code>,
+              <code>44581 &ne; 43472</code> drops every line.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 6 &mdash; Identify both ops parties &mdash; a duplicate customer</div>
+          <div class="step-body">
+            <p>Checked what <code>43472</code> and <code>44581</code> are, and whether either has a finance vendor:</p>
+            <pre>SELECT CustomerID, CuName, isActive FROM masterOps.Customer
+WHERE CustomerID IN (43472, 44581);
+
+SELECT CustomerID, CuName, OpsID, LedgerID, isActive FROM fin.FVendor
+WHERE OpsID IN (43472, 44581);</pre>
+            <div class="result-box">masterOps.Customer
+43472   NEW GLOBE LOGISTIK LLP   1
+44581   NEW GLOBE LOGISTIK LLP   1
+
+fin.FVendor
+40210   NEW GLOBE LOGISTIK LLP   OpsID 43472   Ledger 12104   Active 1</div>
+            <p>
+              Both ops IDs are the <strong>same firm</strong> &mdash; a duplicate <code>masterOps.Customer</code>
+              record. Only <code>43472</code> is wired to a finance vendor; <code>44581</code> has no
+              <code>FVendor</code> row at all. The job costs were booked against the orphan twin
+              <code>44581</code>, which is payable to no one on the finance side.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 7 &mdash; Blast radius of the duplicate party</div>
+          <div class="step-body">
+            <p>Checked how widely the orphan party <code>44581</code> is used:</p>
+            <pre>SELECT JobID, VendorInvNo, COUNT(*) AS Lines
+FROM ff.BB_Cost
+WHERE PartyID = 44581
+GROUP BY JobID, VendorInvNo
+ORDER BY JobID;</pre>
+            <div class="result-box">JobID   VendorInvNo         Lines
+62389   AHMAE/0045/25-26    1
+72032   CCUAE/0096/25-26    1
+72076   BOMAE/1781/25-26    1
+74390   BOMAE/2603/25-26    1
+74783   CCUAE/0138/25-26    1
+80736   AHMAE/0024/26-27    5
+82438   AHMAE/0050/26-27    4   &larr; reported</div>
+            <p>
+              The orphan party stranded <strong>7 vendor invoices across 7 jobs</strong>, all NEW GLOBE
+              LOGISTIK LLP. The reported invoice is one of them; the other six have the same defect but were not
+              raised, so only the reported invoice was corrected (see Recurrence Risk).
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Root Cause</div>
+        <div class="alert alert-danger">
+          <strong>ff.BB_Cost (job 82438, invoice AHMAE/0050/26-27) &mdash; PartyID = 44581, should be 43472</strong>
+          <code>masterOps.Customer</code> holds two records for NEW GLOBE LOGISTIK LLP &mdash; <code>43472</code>
+          and <code>44581</code>. The finance vendor (<code>FVendor 40210</code> &rarr; ledger 12104) is linked to
+          <code>OpsID 43472</code>, but this job's cost lines were booked against the duplicate <code>44581</code>,
+          which has no finance vendor. The Payment screen SP
+          <code>Fin.Search_Purchase_Invoice_Inventory_By_VendorID</code> gates invoices on
+          <code>inner join @tblVendor on VendorID = bc.PartyID</code> (<code>@VendorID = OpsID = 43472</code>),
+          so all four cost lines &mdash; and therefore the whole invoice &mdash; are dropped.
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Confirmation Queries</div>
+        <p>Preview of the exact rows to change (returned 4 rows, all <code>PartyID = 44581</code>):</p>
+        <pre>SELECT CostID, JobID, VendorInvNo, PartyID
+FROM ff.BB_Cost
+WHERE CostID IN (375636, 375637, 375638, 375641);</pre>
+        <div class="result-box">375636   82438   AHMAE/0050/26-27   44581
+375637   82438   AHMAE/0050/26-27   44581
+375638   82438   AHMAE/0050/26-27   44581
+375641   82438   AHMAE/0050/26-27   44581</div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Solution</div>
+        <p>
+          Repointed the four export cost lines from the orphan duplicate party <code>44581</code> to the
+          correctly-linked party <code>43472</code>. Same firm, same amounts and currency &mdash; only the party
+          pointer changes to the ops record that owns the Sundry-Creditor ledger. Scoped to the four exact
+          <code>CostID</code>s so it is surgical and cleanly reversible. Applied and verified in the frontend on
+          <strong>22 Jul 2026</strong> &mdash; the invoice now appears and is selectable on the Payment screen
+          under NEW GLOBE LOGISTIK LLP.
+        </p>
+        <pre>-- Applied (4 rows affected)
+UPDATE ff.BB_Cost
+SET PartyID = 43472
+WHERE CostID IN (375636, 375637, 375638, 375641)
+  AND PartyID = 44581;</pre>
+        <div class="alert alert-warning">
+          <strong>Revert (if needed)</strong>
+          <pre style="margin:6px 0 0;">UPDATE ff.BB_Cost
+SET PartyID = 44581
+WHERE CostID IN (375636, 375637, 375638, 375641)
+  AND PartyID = 43472;</pre>
+        </div>
+        <div class="alert alert-info">
+          <strong>Permanent fix (pending &mdash; master-data cleanup)</strong>
+          The durable fix is at the master level: repoint the remaining six invoices' <code>BB_Cost</code> lines
+          from <code>44581</code> to <code>43472</code> (with Finance sign-off, since some are FY 25-26 and may
+          already be reconciled), then deactivate / merge duplicate ops-customer <code>44581</code> so new jobs
+          can no longer be booked against it. Only the reported invoice (job 82438) was corrected under this task.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- Recurrence Risk — always include this section -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Recurrence Risk</div>
+    <table>
+      <thead>
+        <tr><th>Issue</th><th>Risk</th><th>Will It Recur?</th><th>Action Required Until Permanent Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Invoice booked against orphan duplicate ops-customer (44581) not payable on Payment screen</td>
+          <td style="color: #c0392b; font-weight: 700;">High</td>
+          <td>Yes &mdash; duplicate ops-customer 44581 (NEW GLOBE LOGISTIK LLP) is still active and selectable at booking, and six other invoices are already stranded on it.</td>
+          <td>When a vendor invoice will not show on Payment though the vendor is linked, compare the cost line's <code>BB_Cost.PartyID</code> against <code>FVendor.OpsID</code>; repoint the affected lines to the linked <code>OpsID</code>. Escalate the six remaining invoices + the duplicate-customer merge to Finance / master-data.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- OPTIONAL: Observations -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Observations</div>
+    <p style="color: #333; line-height: 1.7; margin-bottom: 10px;">
+      The two <code>CostID = 0</code> rows in the invoice detail (Step 4) are GST / rounding lines, not job cost
+      lines. They never carry a <code>BB_Cost.CostID</code> and are expected to be absent from the party match &mdash;
+      they are not part of the defect.
+    </p>
+  </div>
+
+  <!-- Tables & Objects Involved -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Tables &amp; Objects Involved</div>
+    <table>
+      <thead>
+        <tr><th>Object</th><th>Type</th><th>Role</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Fin.Search_Purchase_Invoice_Inventory_By_VendorID</td><td>SP</td><td>Loads a vendor's outstanding invoices on the Payment screen; gates on <code>bc.PartyID = @VendorID</code></td></tr>
+        <tr><td>Fin.Get_Vendor_Creditor</td><td>SP</td><td>Vendor picker on the Payment screen; returns <code>FVendor.OpsID</code> as the <code>@VendorID</code></td></tr>
+        <tr><td>ff.BB_Cost</td><td>Table</td><td>Export cost lines; <code>PartyID</code> = ops vendor on each line (root-cause table)</td></tr>
+        <tr><td>ff.Tally_Invoice_Head_Pur</td><td>Table</td><td>Purchase / vendor invoice header</td></tr>
+        <tr><td>ff.Tally_Invoice_Detail_Pur</td><td>Table</td><td>Vendor invoice detail; segment + <code>CostID</code></td></tr>
+        <tr><td>fin.FVendor</td><td>Table</td><td>Finance vendor master; <code>OpsID</code> links to the ops customer</td></tr>
+        <tr><td>fin.LedgerMaster</td><td>Table</td><td>Sundry-Creditor ledger for the vendor (<code>ParentID = 52</code>)</td></tr>
+        <tr><td>masterOps.Customer</td><td>Table</td><td>Ops customer/vendor master; held the duplicate record (43472 vs 44581)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <span>BLISS &mdash; Bug Report &nbsp;|&nbsp; TASK-31362 &nbsp;|&nbsp; Payment (Accounts Payable)</span>
+    <span>22 Jul 2026</span>
+  </div>
+
+</body>
+</html>

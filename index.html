@@ -75,6 +75,17 @@
   <script>
     const reports = [
       {
+        task: '31362',
+        title: 'Vendor Invoice Not Appearing on Payment Screen',
+        module: 'Payment (Accounts Payable)',
+        branch: 'Ahmedabad (Q)',
+        jobs: '82438',
+        invoices: 'AHMAE/0050/26-27',
+        date: '22 Jul 2026',
+        file: 'TASK-31362.html',
+        summary: 'Vendor invoice would not show on Transaction › Payment for NEW GLOBE LOGISTIK LLP. Vendor master was fully linked (FVendor OpsID 43472) — the fault was a duplicate masterOps.Customer: the job cost lines were booked against the orphan twin 44581 (no finance vendor), so the SP gate inner join @tblVendor on PartyID = OpsID dropped them. Fix: repoint the 4 BB_Cost lines 44581 → 43472 (applied & verified 22 Jul 2026, reversible). 6 more invoices on 44581 + duplicate-customer merge flagged for Finance.'
+      },
+      {
         task: '31113',
         title: 'Invoice Not Appearing on Cheque Request Page',
         module: 'Cheque Request',
