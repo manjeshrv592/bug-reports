@@ -151,6 +151,17 @@
         file: 'TASK-31347.html',
         summary: 'Customer "INTERIOR THREE SIXTY LLC" would not appear in the Debit/Credit Note customer autocomplete. The finance ledger and FCustomer were both intact and active — only masterOps.Customer.isActive was 0 (deactivated a day after creation). Fin.Get_Customer_Debtor filters mc.isActive=1, so the customer was excluded, blocking the CN against open invoice 26700996 (24,609 outstanding). Fix: reactivate CustomerId 50029 (reversible).'
       },
+      {
+        task: '29782',
+        title: 'Sustainability Ship Transport — Distance & Emission Missing / Abnormal',
+        module: 'Sustainability (Ship Transport)',
+        branch: 'Multiple (S / GHA / O / C)',
+        jobs: '2504482 / 2504483 / 2504486 / 2504498 / 2501739 / 2501529',
+        invoices: '—',
+        date: '22 Jul 2026',
+        file: 'TASK-29782.html',
+        summary: 'Six 2025 export jobs on the Ship Transport report show blank/zero Distance or Emission. Three causes: (1) four ports (Algiers, Baltimore, Lome, Wuhan) have no LatLon, so the coordinate-driven distance fetch can never build those lanes — no distance, no emission; (2) Update_BBL discards the Distance returned by fn_Invoice_MTCO2_Gen (systemic — ~88% of 2025 export jobs show blank distance); (3) job 2504498 was simply never re-stamped. "Abnormal transit days" is actually total container-distance (per-container × container count) — the report has no transit column. Fix PROPOSED (seed coords → fetch → re-stamp, with reverts); not yet applied. Permanent code fix + backfill noted separately.'
+      },
       // Add new reports here
     ];
 

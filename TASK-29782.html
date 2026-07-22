@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TASK-29782 &mdash; Sustainability (Ship Transport)</title>
+  <style>
+    html { scroll-behavior: smooth; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 13px;
+      color: #1a1a1a;
+      background: #fff;
+      padding: 40px;
+      max-width: 940px;
+      margin: auto;
+    }
+
+    .header { background: #1a3c6e; color: #fff; padding: 24px 28px; border-radius: 6px; margin-bottom: 28px; }
+    .header h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .header p { font-size: 12px; color: #b0c4de; }
+
+    .meta-box {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #f4f7fb;
+      border: 1px solid #d0dbe8;
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin-bottom: 32px;
+    }
+    .meta-box .item label { font-size: 11px; color: #6b7a90; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px; }
+    .meta-box .item span { font-weight: 600; color: #1a1a1a; }
+
+    .page-index { background: #f4f7fb; border: 1px solid #d0dbe8; border-radius: 6px; padding: 14px 20px; margin-bottom: 28px; }
+    .page-index p { font-size: 11px; font-weight: 700; color: #6b7a90; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .page-index ol { margin: 0; padding-left: 18px; }
+    .page-index li { margin-bottom: 4px; }
+    .page-index a { font-size: 13px; color: #1a3c6e; text-decoration: none; }
+    .page-index a:hover { text-decoration: underline; }
+
+    .issue-block { border: 1px solid #d0dbe8; border-radius: 8px; margin-bottom: 36px; overflow: hidden; }
+    .issue-header { background: #1a3c6e; color: #fff; padding: 14px 20px; }
+    .issue-header h2 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .issue-header p { font-size: 12px; color: #b0c4de; }
+    .issue-body { padding: 20px; }
+
+    .takeaway { background: #f0f4ff; border-left: 4px solid #1a3c6e; border-radius: 0 5px 5px 0; padding: 11px 16px; margin-bottom: 18px; font-size: 12.5px; color: #1a1a1a; line-height: 1.6; }
+    .takeaway strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7a90; margin-bottom: 4px; }
+
+    .sec { margin-bottom: 22px; }
+    .sec-title { font-size: 13px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px; }
+    .sec p { line-height: 1.7; color: #333; margin-bottom: 8px; }
+
+    .step { border: 1px solid #e0e7ef; border-radius: 6px; margin-bottom: 14px; overflow: hidden; }
+    .step-header { background: #e8eef7; color: #1a3c6e; padding: 8px 14px; font-weight: 600; font-size: 12.5px; }
+    .step-body { padding: 14px 16px; }
+    .step-body p { margin-bottom: 8px; line-height: 1.6; color: #333; }
+
+    pre {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 14px 16px;
+      border-radius: 5px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin: 10px 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .result-box {
+      background: #f0f4f0;
+      border: 1px solid #b2d0b2;
+      border-radius: 5px;
+      padding: 10px 14px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      color: #1a1a1a;
+      margin: 10px 0;
+      white-space: pre-wrap;
+    }
+
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+    th { background: #1a3c6e; color: #fff; padding: 8px 10px; text-align: left; font-weight: 600; }
+    td { padding: 7px 10px; border-bottom: 1px solid #e0e7ef; vertical-align: top; }
+    tr:nth-child(even) td { background: #f4f7fb; }
+    .highlight-row td { background: #fdecea !important; }
+    .pass { color: #1a7a1a; font-weight: 700; }
+    .fail { color: #c0392b; font-weight: 700; }
+
+    .alert { border-radius: 5px; padding: 12px 16px; margin: 12px 0; font-size: 12.5px; line-height: 1.6; }
+    .alert-danger  { background: #fdecea; border-left: 4px solid #c0392b; color: #7b1e1e; }
+    .alert-warning { background: #fff8e1; border-left: 4px solid #f39c12; color: #7a5c00; }
+    .alert-info    { background: #e8f4fb; border-left: 4px solid #2980b9; color: #1a4a6e; }
+    .alert strong  { display: block; margin-bottom: 4px; }
+
+    .back-link { display: inline-block; margin-bottom: 20px; font-size: 12px; color: #1a3c6e; text-decoration: none; }
+    .back-link:hover { text-decoration: underline; }
+
+    .footer { margin-top: 36px; border-top: 1px solid #d0dbe8; padding-top: 14px; font-size: 11px; color: #888; display: flex; justify-content: space-between; }
+
+    @media print {
+      body { padding: 20px; }
+      .issue-block { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-link">&larr; Back to Bug Reports Index</a>
+
+  <div class="header">
+    <h1>TASK-29782 &mdash; Sustainability Ship Transport: Distance &amp; Emission Missing / Abnormal</h1>
+    <p>System: BLISS &nbsp;|&nbsp; Module: Sustainability (Ship Transport) &nbsp;|&nbsp; Date: 22 July 2026</p>
+  </div>
+
+  <div class="meta-box">
+    <div class="item"><label>Task</label><span>29782</span></div>
+    <div class="item"><label>Module</label><span>Sustainability (Ship Transport)</span></div>
+    <div class="item"><label>Date Reported</label><span>22 Jul 2026</span></div>
+    <div class="item"><label>Issues in Task</label><span>1</span></div>
+  </div>
+
+  <div class="page-index">
+    <p>Issues in this report</p>
+    <ol>
+      <li><a href="#issue-1">Distance and Emission missing (and one abnormal-looking value) for six 2025 export jobs on the Ship Transport report</a></li>
+    </ol>
+  </div>
+
+
+  <!-- ===========================
+       ISSUE 1
+       =========================== -->
+  <div class="issue-block" id="issue-1">
+    <div class="issue-header">
+      <h2>Issue 1 &mdash; Ship Transport report: missing / abnormal Distance &amp; Emission</h2>
+      <p>Jobs 2504482, 2504483, 2504486, 2504498, 2501739, 2501529 &nbsp;|&nbsp; Sustainability &gt; Ship Transport &nbsp;|&nbsp; Year 2025</p>
+    </div>
+    <div class="issue-body">
+
+      <div class="takeaway">
+        <strong>Key Takeaway</strong>
+        On the Ship Transport report, <b>Distance</b> and <b>Emission (MTCO2e)</b> are pre-stored on the job row (<code>ff.BJob</code>, summed up from <code>ff.BBL</code>) &mdash; the report only displays them, it does not compute them. A blank or zero value therefore means the value was never stamped, and the stamping depends on a port-to-port distance existing in <code>ff.PortMaster_Distances</code>. That distance is fetched from an external route API that is <b>coordinate-driven</b>: if a port has no <code>LatLon</code>, no distance can ever be produced for any lane that uses it &mdash; and with no distance, emission stays 0.
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Problem</div>
+        <p>
+          On <b>Sustainability &gt; Ship Transport</b> for <b>Year 2025</b>, several jobs show missing or abnormal data:
+        </p>
+        <ul style="margin: 0 0 8px 22px; line-height: 1.7; color: #333;">
+          <li><b>Distance not showing</b> &mdash; Jobs 2504482, 2504483</li>
+          <li><b>Emission not showing</b> &mdash; Jobs 2504486, 2504498</li>
+          <li><b>Abnormal value showing</b> (reported as transit days) &mdash; Jobs 2501739, 2501529</li>
+        </ul>
+        <p>
+          Not a billing issue &mdash; this is a reporting / emissions feature, so no invoices are involved. Branch was not
+          specified at reporting time and had to be verified per job. Reported endpoint was expected to be the
+          Sustainability report SP, to be confirmed during investigation.
+        </p>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Investigation</div>
+
+        <div class="step">
+          <div class="step-header">Step 1 &mdash; Identify the report SP and classify all six jobs</div>
+          <div class="step-body">
+            <p>
+              The Ship Transport grid is served by <code>ReportController/Rpt_Sustainability_01</code> (params
+              <code>Branch, Date1, Date2, DType</code>). Reading the SP confirms the export grid displays
+              <code>j.Distance</code> and <code>j.MTCO2e</code> straight off <code>ff.BJob</code> &mdash; no live calculation.
+              First we looked up the six jobs and their stored values.
+            </p>
+            <pre>select JobNumber, Branch, Segment, JobDate, POLID, PODID,
+       GrossWt, T20, T40, Distance, MTCO2e
+from ff.BJob
+where JobNumber in ('2504482','2504483','2504486','2504498','2501739','2501529');</pre>
+            <div class="result-box">Job      Br   Seg  T20 T40   Distance   MTCO2e
+2504482  O    E1   0   1     NULL       1.01506   &larr; distance blank, emission OK
+2504483  O    E1   0   1     NULL       1.66484   &larr; distance blank, emission OK
+2504486  C    E2   2   0     NULL       0.00000   &larr; both blank
+2504498  C    E2   0   2     NULL       0.00000   &larr; both blank
+2501739  GHA  E1   20  0     97060      0.00000   &larr; distance present, emission 0
+2501529  S    E2   10  0     110920     0.00000   &larr; distance present, emission 0</div>
+            <p>
+              All six are <b>export jobs</b> (<code>ff.BJob</code>). The symptoms split into three clearly different
+              states &mdash; already a sign of more than one root cause. Note <code>POLID</code>/<code>PODID</code> are NULL on
+              <code>ff.BJob</code> itself; the report reads POL/POD from the booking, so that is not the display bug.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 2 &mdash; Replicate the SP's distance &amp; emission-factor lookup per job</div>
+          <div class="step-body">
+            <p>
+              We rebuilt the SP's exact join chain (booking POL/POD &rarr; <code>PortMaster_Distances</code> &rarr;
+              <code>TradeLane_Sustain</code> &rarr; <code>CountryRegion_Sustain</code>) and called
+              <code>ff.fn_sustain</code> to see what emission <em>would</em> be produced today.
+            </p>
+            <div class="result-box">Job      POL &rarr; POD            PortPairKm  Factor  fn_sustain
+2504482  Mundra &rarr; Rotterdam   6313 / 10895  79.8   1.111   (2 conflicting rows)
+2504483  Mundra &rarr; Rotterdam   6313 / 10895  79.8   1.833
+2504498  Ennore &rarr; Cartagena   9575          66.4   2.708   (all inputs present!)
+2504486  Ennore &rarr; Algiers     NULL          66.4   0       (no distance row)
+2501739  Tema  &rarr; Baltimore    NULL          166.1  0       (no distance row)
+2501529  Lome  &rarr; Wuhan Pt     NULL          105.7  0       (no distance row)</div>
+            <p>
+              The emission <b>factor</b> resolves for every job. The differentiator is <code>PortPairKm</code>: three lanes
+              have <b>no <code>PortMaster_Distances</code> row at all</b>. <code>fn_sustain</code> shows 2504498 could be
+              computed right now (2.708) &mdash; it was simply never stamped.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 3 &mdash; Confirm the three lanes are absent from the distance table</div>
+          <div class="step-body">
+            <pre>select FromCode, ToCode, Distance
+from ff.PortMaster_Distances
+where (FromCode in ('INENR','GHTEM','TGLFW') and ToCode in ('DZALG','USBAL','CNWHG'))
+   or (FromCode in ('DZALG','USBAL','CNWHG') and ToCode in ('INENR','GHTEM','TGLFW'));</pre>
+            <div class="result-box">(0 rows) &mdash; Ennore&rarr;Algiers, Tema&rarr;Baltimore and Lome&rarr;Wuhan
+have no distance row in either direction.</div>
+            <p>
+              The <code>bss_audit.ff.Sustainability_Port_Error</code> log carries repeated
+              <em>"Port pair Not Found!"</em> entries for Ennore&rarr;Algiers (last tried 17 Jul 2026) and
+              Tema&rarr;Baltimore (last tried 21 Apr 2026). Lome&rarr;Wuhan has <b>no</b> error rows at all &mdash; the fetch
+              was never even dispatched for it.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 4 &mdash; Trace the values to BL level (how the report totals are built)</div>
+          <div class="step-body">
+            <p>
+              <code>BJob.Distance</code>/<code>MTCO2e</code> are a <code>SUM()</code> over the job's BL-containers of
+              <code>ff.BBL.Distance</code>/<code>MTCO2e</code>. The per-container sum also explains the "abnormal" figure.
+            </p>
+            <div class="result-box">Job      BLID    BJob_Dist  BL_Dist  BL_MTCO2e  ContCount
+2501529  58272   110920     11092    0          10   &rarr; 11092 &times; 10 = 110920
+2501739  58418   97060      4853     0          20   &rarr;  4853 &times; 20 =  97060
+2504482  60620   NULL       NULL     1.01506    1
+2504486  60624   NULL       NULL     0          2
+2504498  60635   NULL       NULL     0          2</div>
+            <p>
+              The reported "abnormal transit days" is really the <b>total container-distance</b>
+              (per-container distance &times; container count). There is <b>no transit-days column</b> in this report;
+              the large number is Distance, inflated by the container count. Also visible here: jobs 2504482/83 carry a
+              valid <code>BL.MTCO2e</code> but a <b>NULL <code>BL.Distance</code></b>.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 5 &mdash; Why the distance fetch fails: missing port coordinates</div>
+          <div class="step-body">
+            <p>
+              The distance is fetched by <code>ff.Get_Port_Distances_API</code>, which passes each port's <code>LatLon</code>
+              to an external route API. If a port has no coordinates, the call cannot route and logs
+              <em>"Port pair Not Found!"</em>. We checked the six ports involved:
+            </p>
+            <pre>select PortId, PortCode, PortName, LatLon
+from masterOps.Portmaster
+where PortId in (61043,29983,56490,90602,87035,16720);</pre>
+            <div class="result-box">INENR  Ennore     80.352465,13.253365   &larr; has coords
+GHTEM  Tema       0.012948,5.629084     &larr; has coords
+DZALG  Algiers    NULL                  &larr; MISSING
+USBAL  Baltimore  NULL                  &larr; MISSING
+TGLFW  Lome       NULL                  &larr; MISSING
+CNWHG  Wuhan Pt   NULL                  &larr; MISSING</div>
+            <p>
+              Every blocked lane has at least one coordinate-less port (Lome&rarr;Wuhan has two). A check of the staging
+              copy (<code>Bss_Dev.ff.PortMaster_Distances</code>) confirmed these lanes were never captured there either.
+              This &mdash; not a vendor outage &mdash; is why the distances were never produced.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 6 &mdash; The "distance blank" symptom is systemic (code defect)</div>
+          <div class="step-body">
+            <p>
+              Jobs 2504482/83 have emission but no distance because the export BL-save
+              (<code>Update_BBL</code>) captures only <code>MTCO2</code> from <code>ff.fn_Invoice_MTCO2_Gen</code> and
+              <b>discards the <code>Distance</code> it returns</b> &mdash; and no other code writes <code>ff.BBL.Distance</code>.
+              We measured how widespread this is across the 2025 export book:
+            </p>
+            <pre>-- emission present but distance blank
+select count(*) from ff.BJob
+where JobDate >= '2025-01-01' and JobDate < '2026-01-01'
+  and Segment like 'E%' and Segment not in ('E0','E8')
+  and isNull(MTCO2e,0) > 0 and isNull(Distance,0) = 0;   -- 9253
+
+-- both populated (healthy)
+select count(*) ... and isNull(Distance,0) > 0;           -- 1248</pre>
+            <div class="result-box">9,253 export jobs with emission but NO distance  vs  1,248 healthy
+&rarr; ~88% of emission-bearing 2025 export jobs show a blank Distance.</div>
+            <p>
+              "Distance not showing" is therefore not specific to the two reported jobs &mdash; it is close to the default
+              state of the export Ship Transport report, driven by the <code>Update_BBL</code> defect.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Root Cause</div>
+
+        <div class="alert alert-danger">
+          <strong>Three distinct causes behind the six jobs</strong>
+          <b>&#9312; Missing port coordinates</b> &mdash; <code>masterOps.Portmaster.LatLon</code> is NULL for
+          <b>Algiers (29983), Baltimore (90602), Lome (87035), Wuhan (16720)</b>. The distance fetch
+          (<code>ff.Get_Port_Distances_API</code>) is coordinate-driven, so lanes using these ports never get a
+          <code>PortMaster_Distances</code> row &rarr; no distance <em>and</em> no emission.
+          <span style="display:block; margin-top:6px;">Affects: <b>2504486, 2501739, 2501529</b> (emission 0; 2501739/2501529 carry a legacy distance from an older path).</span>
+        </div>
+
+        <div class="alert alert-danger">
+          <strong>&#9313; Export BL-save discards Distance (code defect)</strong>
+          <code>ff.Update_BBL</code> runs <code>select @MTCO2e = MTCO2 from ff.fn_Invoice_MTCO2_Gen('BL',@BLID,'E1')</code>
+          but ignores the <code>Distance</code> column the function also returns, and nothing else writes
+          <code>ff.BBL.Distance</code>. Result: export jobs get an emission with a <b>blank distance</b>.
+          <b>Systemic</b> &mdash; ~9,253 / ~10,500 (88%) of 2025 emission-bearing export jobs are affected.
+          <span style="display:block; margin-top:6px;">Affects (reported): <b>2504482, 2504483</b>.</span>
+        </div>
+
+        <div class="alert alert-danger">
+          <strong>&#9314; Never re-stamped</strong>
+          <b>2504498</b> (Ennore&rarr;Cartagena) has a distance row (9575), a resolving factor, and
+          <code>fn_sustain</code> = 2.708 &mdash; but the BL emission/distance were never computed. A re-stamp fills it.
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Solution</div>
+
+        <div class="alert alert-warning">
+          <strong>Status: PROPOSED &mdash; not yet applied, not yet verified in the frontend.</strong>
+          Nothing below has been run against the database. Coordinates in Part A are approximate and must be verified
+          against an authoritative port source before applying. Steps to run in order, each with its own revert.
+        </div>
+
+        <p><b>Part A &mdash; seed the four missing port coordinates</b> (format is <code>"Lon,Lat"</code>, west/south negative).</p>
+        <pre>-- Preview (expect 4 rows, all LatLon NULL)
+select PortId, PortCode, PortName, LatLon
+from masterOps.Portmaster
+where PortId in (29983,90602,87035,16720);
+
+-- Apply (expect 4 rows affected)
+update masterOps.Portmaster set LatLon='3.068,36.768'   where PortId=29983 and LatLon is null;  -- Algiers
+update masterOps.Portmaster set LatLon='-76.535,39.267' where PortId=90602 and LatLon is null;  -- Baltimore
+update masterOps.Portmaster set LatLon='1.284,6.128'    where PortId=87035 and LatLon is null;  -- Lome
+update masterOps.Portmaster set LatLon='114.305,30.593' where PortId=16720 and LatLon is null;  -- Wuhan
+
+-- Revert
+update masterOps.Portmaster set LatLon=NULL where PortId in (29983,90602,87035,16720);</pre>
+
+        <p><b>Part B &mdash; fetch the three lane distances.</b>
+          <span style="color:#7a5c00;">Side-effecting: makes a live external call to the route API and inserts a cache row per lane.</span></p>
+        <pre>exec ff.Get_Port_Distances_API 61043, 29983, 'S', '';   -- Ennore  -> Algiers
+exec ff.Get_Port_Distances_API 56490, 90602, 'S', '';   -- Tema    -> Baltimore
+exec ff.Get_Port_Distances_API 87035, 16720, 'S', '';   -- Lome    -> Wuhan
+
+-- Verify the new rows exist
+select FromCode, ToCode, Distance, Created from ff.PortMaster_Distances
+where (FromCode in ('INENR','GHTEM','TGLFW') and ToCode in ('DZALG','USBAL','CNWHG'))
+   or (FromCode in ('DZALG','USBAL','CNWHG') and ToCode in ('INENR','GHTEM','TGLFW'));
+
+-- Revert (delete ONLY the rows created by this fix &mdash; check Created / CreatedBy first)
+delete from ff.PortMaster_Distances
+where (FromCode in ('INENR','GHTEM','TGLFW') and ToCode in ('DZALG','USBAL','CNWHG'))
+   or (FromCode in ('DZALG','USBAL','CNWHG') and ToCode in ('INENR','GHTEM','TGLFW'));</pre>
+
+        <p><b>Part C &mdash; re-stamp the affected BLs / jobs.</b> First capture the current values (this snapshot <em>is</em> the revert source), then re-stamp. Exact per-job stamp values are finalised once Part B returns the fetched distances.</p>
+        <pre>-- Baseline snapshot (revert source) &mdash; keep these tables until the fix is signed off
+select JobID, JobNumber, Distance, MTCO2e
+into  bss_audit.dbo.Revert_29782_BJob
+from  ff.BJob where JobNumber in ('2504482','2504483','2504486','2504498','2501739','2501529');
+
+select BLID, Distance, MTCO2e
+into  bss_audit.dbo.Revert_29782_BBL
+from  ff.BBL where BLID in (60620,60621,60624,60635,58418,58272);
+
+-- Re-stamp: preferred = re-save each booking in the app (runs the full correct chain);
+--           alternative = controlled per-job UPDATE of BBL.Distance/MTCO2e then re-sum to BJob,
+--           using the distances fetched in Part B. Finalised after Part B.
+
+-- Revert (restore originals)
+update b set b.Distance=r.Distance, b.MTCO2e=r.MTCO2e
+from ff.BBL b join bss_audit.dbo.Revert_29782_BBL r on r.BLID=b.BLID;
+update j set j.Distance=r.Distance, j.MTCO2e=r.MTCO2e
+from ff.BJob j join bss_audit.dbo.Revert_29782_BJob r on r.JobID=j.JobID;</pre>
+
+        <div class="alert alert-info">
+          <strong>Permanent fixes (separate track &mdash; do not ride on this task)</strong>
+          <b>Code:</b> change <code>ff.Update_BBL</code> to also persist the <code>Distance</code> returned by
+          <code>fn_Invoice_MTCO2_Gen</code> (capture <code>@Dist = Distance</code> and add <code>Distance=@Dist</code> to the
+          BBL update), so export jobs stop losing distance at save time.
+          <b>Data:</b> a one-off backfill of the ~9,253 historical export jobs.
+          <b>Master data:</b> add <code>LatLon</code> to every sea port that lacks it, so future lanes fetch on first use.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- Recurrence Risk -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Recurrence Risk</div>
+    <table>
+      <thead>
+        <tr><th>Cause</th><th>Risk</th><th>Will It Recur?</th><th>Action Required Until Permanent Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>&#9312; Missing port <code>LatLon</code></td>
+          <td style="color: #c0392b; font-weight: 700;">High</td>
+          <td>Yes &mdash; any new lane using a port without coordinates fails the same way and logs "Port pair Not Found!".</td>
+          <td>Seed <code>Portmaster.LatLon</code> for the port, then run <code>Get_Port_Distances_API</code> for the lane before the job is reported on.</td>
+        </tr>
+        <tr>
+          <td>&#9313; <code>Update_BBL</code> discards Distance</td>
+          <td style="color: #c0392b; font-weight: 700;">High (systemic)</td>
+          <td>Yes &mdash; every export BL saved under current code loses its distance (~88% of 2025 export jobs affected).</td>
+          <td>Until the code fix ships, export Distance must be back-filled per job; treat the report's export Distance column as unreliable.</td>
+        </tr>
+        <tr>
+          <td>&#9314; Never re-stamped</td>
+          <td style="color: #7a5c00; font-weight: 700;">Low</td>
+          <td>Occasional &mdash; a BL saved before its lane's distance existed keeps 0 until re-stamped.</td>
+          <td>Re-save / re-stamp the booking once the distance row exists.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Observations -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Observations</div>
+    <table>
+      <thead>
+        <tr><th>Observation</th><th>What it looks like</th><th>Reason / Note</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>"Abnormal transit days"</td>
+          <td>2501739 = 97,060; 2501529 = 110,920</td>
+          <td>Not transit days &mdash; the report has no transit-days column. It is total container-distance (per-container distance &times; container count). Expected behaviour of the sum, not a bug.</td>
+        </tr>
+        <tr>
+          <td>"Wuhan Pt" as an ocean POD</td>
+          <td>Lome &rarr; Wuhan (job 2501529)</td>
+          <td>Wuhan is an inland Yangtze river port ~1,000 km upriver. A sea-route engine may fail to route it even after coordinates are added; if so, this lane needs a manually entered distance and the POD itself should be confirmed.</td>
+        </tr>
+        <tr>
+          <td>Mundra &rarr; Rotterdam has two distance rows</td>
+          <td>6313 and 10895 (nm)</td>
+          <td>Routing variants (Suez vs Cape). The SP's <code>coalesce</code> is non-deterministic between them &mdash; a data-quality item to clean up, not the cause here.</td>
+        </tr>
+        <tr>
+          <td>Rotterdam has no <code>LatLon</code> yet resolves</td>
+          <td>NLRTM LatLon = NULL</td>
+          <td><code>PortMaster_Distances</code> is a persistent cache; Mundra&rarr;Rotterdam has legacy rows, so it works despite missing coordinates. Coordinates are only needed to create a <em>new</em> lane's row.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Tables & Objects Involved -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Tables &amp; Objects Involved</div>
+    <table>
+      <thead>
+        <tr><th>Object</th><th>Type</th><th>Role</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>ff.Rpt_Sustainability_01</td><td>SP</td><td>Ship Transport report &mdash; displays stored <code>BJob.Distance</code>/<code>MTCO2e</code></td></tr>
+        <tr><td>ff.BJob</td><td>Table</td><td>Export job header &mdash; stored Distance/MTCO2e (summed from BBL)</td></tr>
+        <tr><td>ff.BBL</td><td>Table</td><td>Bill of Lading &mdash; per-BL Distance/MTCO2e source; <code>Distance</code> column is not written on save (defect)</td></tr>
+        <tr><td>ff.Update_BBL</td><td>SP</td><td>Export BL save &mdash; discards the Distance returned by fn_Invoice_MTCO2_Gen</td></tr>
+        <tr><td>ff.fn_Invoice_MTCO2_Gen</td><td>Function</td><td>Computes MTCO2 and Distance per BL/container from PortMaster_Distances + factor</td></tr>
+        <tr><td>ff.Get_Port_Distances_API</td><td>SP</td><td>Coordinate-driven distance fetch &rarr; inserts into PortMaster_Distances</td></tr>
+        <tr><td>ff.PortMaster_Distances</td><td>Table</td><td>Port-to-port distance cache (nautical miles)</td></tr>
+        <tr><td>masterOps.Portmaster</td><td>Table</td><td><code>LatLon</code> coordinates &mdash; NULL for Algiers/Baltimore/Lome/Wuhan</td></tr>
+        <tr><td>bss_audit.ff.Sustainability_Port_Error</td><td>Table</td><td>Logs "Port pair Not Found!" on failed distance fetches</td></tr>
+        <tr><td>masterCom.TradeLane_Sustain / CountryRegion_Sustain</td><td>Tables</td><td>Emission-factor lookup (Year 2023)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <span>BLISS &mdash; Bug Report &nbsp;|&nbsp; TASK-29782 &nbsp;|&nbsp; Sustainability (Ship Transport)</span>
+    <span>22 Jul 2026</span>
+  </div>
+
+</body>
+</html>
