@@ -378,12 +378,82 @@ SELECT * FROM appConfig.Numbers WHERE BranchId='B' AND NType='FINV' AND YearCode
 
         <div class="alert alert-info">
           <strong>Permanent fix (pending &mdash; code change)</strong>
-          The data fix above resolves this invoice but the same failure will return at every fiscal-year
-          boundary for any branch whose next window was not pre-created. <code>appConfig.Get_Number</code>
-          should <em>auto-create</em> the next FY window and continue &mdash; it already does exactly this for
-          <code>NType = 'Q'</code> (quotations) &mdash; instead of returning <code>to&nbsp;insert</code>. Alternatively a
-          scheduled year-rollover job should clone every active series into the new FY before 1-April. Until
-          that ships, series windows must be created manually each year (see Recurrence Risk).
+          The data fix above resolves this invoice, but the same failure returns at every fiscal-year boundary
+          for any branch / NType whose next window was not pre-created. The root gap: <code>appConfig.Get_Number</code>
+          already <em>auto-creates</em> the missing year window for quotations (<code>NType = 'Q'</code>), but for
+          every other type it simply returns the literal <code>to&nbsp;insert</code> and exits. Two options, in
+          order of preference:
+        </div>
+
+        <p><strong>Option 1 (recommended) &mdash; make <code>Get_Number</code> self-heal.</strong>
+           In <code>appConfig.Get_Number</code>, replace the &ldquo;new financial year&rdquo; block that returns
+           <code>to&nbsp;insert</code> with an auto-create that mirrors the existing <code>NType='Q'</code> logic,
+           but <em>clones the format from the branch&rsquo;s most recent row</em> so the number format stays correct.
+           Replace this:</p>
+        <pre>-- current (fails):
+else
+begin
+    -- new financial year
+    set @R = 'to insert'
+    set @Number = @R
+    return
+End</pre>
+        <p>with this:</p>
+        <pre>-- fixed (auto-creates the year window, then issues a real number):
+else
+begin
+    -- new financial year: create this year's window instead of returning 'to insert'.
+    -- clone NFormat from this branch/type/segment's most recent active row so the format stays consistent.
+    declare @NewFormat varchar(50)
+    select top 1 @NewFormat = NFormat
+    from appConfig.Numbers
+    where BranchId=@Branch and NType=@NType and Segment=@Segment and isActive=1
+    order by DateTo desc
+
+    declare @NewFrom date = ff.Fn_Get_Date_FYear(@Date, @Branch, 1)   -- FY window start (per-branch: fiscal or calendar)
+    declare @NewTo   date = ff.Fn_Get_Date_FYear(@Date, @Branch, 2)   -- FY window end
+
+    if NOT exists (select 1 from appConfig.Numbers
+                   where BranchId=@Branch and NType=@NType and Segment=@Segment
+                     and POD=isNull(@POD,'') and @Date between DateFrom and DateTo and isActive=1)
+        insert into appConfig.Numbers
+               (BranchId, Segment, NType, Number, YearCode, DateFrom, DateTo, isActive, NFormat, POD)
+        select @Branch, @Segment, @NType, 0,
+               right(convert(varchar(4), year(@NewTo)), 2),           -- YearCode from window end year: '27' fiscal, '26' calendar
+               @NewFrom, @NewTo, 1, @NewFormat, isNull(@POD,'')
+
+    Update appConfig.Numbers set Number = Number + 1
+    where BranchId=@Branch and NType=@NType and Segment=@Segment
+      and POD=isNull(@POD,'') and @Date between DateFrom and DateTo and isActive=1
+End
+-- execution then falls through to the existing "select @I=Number ... / format" block and returns a real number.</pre>
+        <div class="alert alert-warning">
+          <strong>Before altering production</strong>
+          <code>Get_Number</code> issues every number in the system (jobs, BLs, invoices, quotations). Apply and
+          test in <code>Bss_Dev</code> first &mdash; generate a boundary-crossing invoice for one fiscal branch
+          (e.g. B / M) and one calendar branch (e.g. SG / DXB&rarr;X), confirm both the number and the format,
+          then promote. Note two dependencies: (1) the year-boundary logic reads each branch&rsquo;s FY start month
+          from <code>masterCom.OrganizationUnit.DateFrom</code> via <code>ff.Fn_Get_Date_FYear</code> (using the
+          remapped code &mdash; SG / ANT / X / &hellip;), so every active branch must have a valid row there;
+          (2) for concurrency at the exact rollover instant, wrap the create+update with an <code>UPDLOCK/HOLDLOCK</code>
+          check or add a unique index on <code>(BranchId, NType, Segment, POD, YearCode, isActive)</code>.
+        </div>
+
+        <div class="alert alert-info">
+          <strong>Option 2 (backup) &mdash; scheduled pre-create.</strong>
+          Parameterise the existing (currently commented-out) <code>ff.Copy_Appconfig_Numbers</code> procedure and
+          run it every March to clone all active series into the new FY before 1-April, so <code>Get_Number</code>
+          never hits the empty case. This is a safety net, not a substitute &mdash; it depends on someone running it
+          each year. Option 1 removes that dependency; the two can coexist.
+        </div>
+
+        <div class="alert alert-info">
+          <strong>Diagnostic reference</strong>
+          <code>Get_Number</code> returns <code>to&nbsp;insert</code> (with a space) when a series exists but no row
+          covers the date &mdash; the <em>lapsed year window</em> case (this ticket). It returns <code>ParameterErr</code>
+          (no space) when no series row exists at all &mdash; the <em>missing series</em> case (TASK-31199). The space
+          survives on <code>to&nbsp;insert</code> only because that path <code>return</code>s before the trailing
+          <code>replace(@R,' ','')</code>.
         </div>
       </div>
 
