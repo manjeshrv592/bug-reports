@@ -75,6 +75,17 @@
   <script>
     const reports = [
       {
+        task: '31354',
+        title: 'Invoice Number Generated as "to insert"',
+        module: 'Invoice',
+        branch: 'Bangkok (B)',
+        jobs: '2611933',
+        invoices: 'BN260700001',
+        date: '23 Jul 2026',
+        file: 'TASK-31354.html',
+        summary: 'Misc (M3) invoice for a Bangkok job saved with the literal string "to insert" instead of a real number. appConfig.Get_Number returns the sentinel "to insert" when an active number series exists but no row covers the invoice date — Bangkok\'s B/FINV series was never rolled into the new fiscal year (2026-04-01 to 2027-03-31); every segment stopped at 2026-03-31. Fix: created the missing FY2026-27 B/FINV windows (N/X/Z) and back-filled BN260700001 onto the invoice. Permanent fix (auto FY rollover) noted for the SP.'
+      },
+      {
         task: '31362',
         title: 'Vendor Invoice Not Appearing on Payment Screen',
         module: 'Payment (Accounts Payable)',

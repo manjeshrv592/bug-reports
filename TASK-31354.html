@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TASK-31354 &mdash; Invoice</title>
+  <style>
+    html { scroll-behavior: smooth; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 13px;
+      color: #1a1a1a;
+      background: #fff;
+      padding: 40px;
+      max-width: 940px;
+      margin: auto;
+    }
+
+    .header { background: #1a3c6e; color: #fff; padding: 24px 28px; border-radius: 6px; margin-bottom: 28px; }
+    .header h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .header p { font-size: 12px; color: #b0c4de; }
+
+    .meta-box {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #f4f7fb;
+      border: 1px solid #d0dbe8;
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin-bottom: 32px;
+    }
+    .meta-box .item label { font-size: 11px; color: #6b7a90; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px; }
+    .meta-box .item span { font-weight: 600; color: #1a1a1a; }
+
+    .page-index { background: #f4f7fb; border: 1px solid #d0dbe8; border-radius: 6px; padding: 14px 20px; margin-bottom: 28px; }
+    .page-index p { font-size: 11px; font-weight: 700; color: #6b7a90; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .page-index ol { margin: 0; padding-left: 18px; }
+    .page-index li { margin-bottom: 4px; }
+    .page-index a { font-size: 13px; color: #1a3c6e; text-decoration: none; }
+    .page-index a:hover { text-decoration: underline; }
+
+    .issue-block { border: 1px solid #d0dbe8; border-radius: 8px; margin-bottom: 36px; overflow: hidden; }
+    .issue-header { background: #1a3c6e; color: #fff; padding: 14px 20px; }
+    .issue-header h2 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .issue-header p { font-size: 12px; color: #b0c4de; }
+    .issue-body { padding: 20px; }
+
+    .takeaway { background: #f0f4ff; border-left: 4px solid #1a3c6e; border-radius: 0 5px 5px 0; padding: 11px 16px; margin-bottom: 18px; font-size: 12.5px; color: #1a1a1a; line-height: 1.6; }
+    .takeaway strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7a90; margin-bottom: 4px; }
+
+    .sec { margin-bottom: 22px; }
+    .sec-title { font-size: 13px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px; }
+    .sec p { line-height: 1.7; color: #333; margin-bottom: 8px; }
+
+    .step { border: 1px solid #e0e7ef; border-radius: 6px; margin-bottom: 14px; overflow: hidden; }
+    .step-header { background: #e8eef7; color: #1a3c6e; padding: 8px 14px; font-weight: 600; font-size: 12.5px; }
+    .step-body { padding: 14px 16px; }
+    .step-body p { margin-bottom: 8px; line-height: 1.6; color: #333; }
+
+    pre {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 14px 16px;
+      border-radius: 5px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin: 10px 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .result-box {
+      background: #f0f4f0;
+      border: 1px solid #b2d0b2;
+      border-radius: 5px;
+      padding: 10px 14px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      color: #1a1a1a;
+      margin: 10px 0;
+      white-space: pre-wrap;
+    }
+
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+    th { background: #1a3c6e; color: #fff; padding: 8px 10px; text-align: left; font-weight: 600; }
+    td { padding: 7px 10px; border-bottom: 1px solid #e0e7ef; vertical-align: top; }
+    tr:nth-child(even) td { background: #f4f7fb; }
+    .highlight-row td { background: #fdecea !important; }
+    .pass { color: #1a7a1a; font-weight: 700; }
+    .fail { color: #c0392b; font-weight: 700; }
+
+    .alert { border-radius: 5px; padding: 12px 16px; margin: 12px 0; font-size: 12.5px; line-height: 1.6; }
+    .alert-danger  { background: #fdecea; border-left: 4px solid #c0392b; color: #7b1e1e; }
+    .alert-warning { background: #fff8e1; border-left: 4px solid #f39c12; color: #7a5c00; }
+    .alert-info    { background: #e8f4fb; border-left: 4px solid #2980b9; color: #1a4a6e; }
+    .alert strong  { display: block; margin-bottom: 4px; }
+
+    .back-link { display: inline-block; margin-bottom: 20px; font-size: 12px; color: #1a3c6e; text-decoration: none; }
+    .back-link:hover { text-decoration: underline; }
+
+    .footer { margin-top: 36px; border-top: 1px solid #d0dbe8; padding-top: 14px; font-size: 11px; color: #888; display: flex; justify-content: space-between; }
+
+    @media print {
+      body { padding: 20px; }
+      .issue-block { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-link">&larr; Back to Bug Reports Index</a>
+
+  <div class="header">
+    <h1>TASK-31354 &mdash; Invoice Number Generated as &ldquo;to insert&rdquo;</h1>
+    <p>System: BLISS &nbsp;|&nbsp; Module: Invoice &nbsp;|&nbsp; Date: 23 July 2026</p>
+  </div>
+
+  <div class="meta-box">
+    <div class="item"><label>Task</label><span>31354</span></div>
+    <div class="item"><label>Module</label><span>Invoice &rsaquo; Invoice</span></div>
+    <div class="item"><label>Date Reported</label><span>23 Jul 2026</span></div>
+    <div class="item"><label>Issues in Task</label><span>1</span></div>
+  </div>
+
+  <div class="page-index">
+    <p>Issues in this report</p>
+    <ol>
+      <li><a href="#issue-1">Invoice number saved as the literal text &ldquo;to insert&rdquo; for a Bangkok Misc job</a></li>
+    </ol>
+  </div>
+
+
+  <!-- ===========================
+       ISSUE 1
+       =========================== -->
+  <div class="issue-block" id="issue-1">
+    <div class="issue-header">
+      <h2>Issue 1 &mdash; Invoice Number Generated as &ldquo;to insert&rdquo;</h2>
+      <p>Job No: 2611933 &nbsp;|&nbsp; Branch: Bangkok (B) &nbsp;|&nbsp; Module: Invoice &rsaquo; Invoice &rsaquo; Invoice</p>
+    </div>
+    <div class="issue-body">
+
+      <div class="takeaway">
+        <strong>Key Takeaway</strong>
+        When an invoice number, purchase entry number, or job number saves as a literal word
+        (<code>to&nbsp;insert</code>, <code>toinsert</code>, or <code>ParameterErr</code>), it is not a UI bug &mdash; it is the
+        <code>appConfig.Get_Number</code> sentinel being persisted verbatim. <code>to&nbsp;insert</code> specifically
+        means the branch&rsquo;s number series <em>exists</em> but no row covers the invoice date, i.e. the
+        annual financial-year window was never rolled over. Every branch series carries a <code>DateTo</code>;
+        at each year boundary the next window must exist or the next invoice strands.
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Problem</div>
+        <p>
+          On <strong>Invoice &rsaquo; Invoice &rsaquo; Invoice</strong> (staging, Bangkok branch), the invoice for
+          job <strong>2611933</strong> displayed the invoice number as the literal string
+          <strong>&ldquo;to insert&rdquo;</strong> instead of a real number, and the format did not match the other
+          invoices in the list. All other rows on the same screen showed proper numbers. A permanent fix
+          was requested, plus a real invoice number for this invoice.
+        </p>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Investigation</div>
+
+        <div class="step">
+          <div class="step-header">Step 1 &mdash; Trace the number-generation path in the SP</div>
+          <div class="step-body">
+            <p>
+              The invoice grid / generation is served by <code>ff.Update_Invoice</code>. It builds the number
+              with <code>NType = 'FINV'</code>, a numbering segment of <code>X</code> (taxable), <code>N</code>
+              (GST = 0) or <code>Z</code> (SEZ), and a branch from <code>ff.Fn_BillBranch</code> &mdash; then writes
+              whatever comes back straight into <code>ff.Invoice.InvoiceNumber</code> with no validation.
+            </p>
+            <pre>-- ff.Update_Invoice (number block)
+set @Segment = 'X'                         -- taxable
+if @GSTAmt = 0  set @Segment = 'N'         -- zero GST
+if @isSEZ   = 1 set @Segment = 'Z'         -- SEZ
+exec appConfig.Get_Number @Branch, @Segment, 'FINV', @InvDate, '', @N output
+insert into ff.Invoice (... InvoiceNumber ...) select ..., @N, ...   -- @N stored verbatim
+
+-- appConfig.Get_Number (the sentinel)
+if exists (... BranchId=@Branch and NType=@NType and Segment=@Segment and isActive=1)
+begin
+    if exists (... and @Date between DateFrom and DateTo ...)
+        Update appConfig.Numbers set Number = Number + 1 where ...
+    else
+    begin
+        set @R = 'to insert'   -- series exists, but NO row covers @Date
+        set @Number = @R
+        return                 -- returns BEFORE the trailing space-strip
+    End
+    ...
+end
+else
+    set @R = 'Parameter Err'   -- no series row at all -> later stripped to 'ParameterErr'</pre>
+            <p>
+              The early <code>return</code> is why the value keeps its space (<code>to&nbsp;insert</code>) &mdash; unlike
+              <code>Parameter&nbsp;Err</code>, which flows on to <code>replace(@R,' ','')</code> and becomes
+              <code>ParameterErr</code>. So <code>to&nbsp;insert</code> = &ldquo;an active series exists for this branch,
+              but no year-window row covers the invoice date.&rdquo;
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 2 &mdash; Locate the invoice and confirm the DB / branch / segment</div>
+          <div class="step-body">
+            <p>
+              The staging header reads <code>QA_BSS</code>, but that is the app label &mdash; no such database exists.
+              A probe across the databases found the row in <strong>BSS</strong>.
+            </p>
+            <pre>SELECT 'BSS' AS Db, i.InvoiceId, i.InvoiceNumber, i.InvoiceDate, i.Segment, i.JobId
+FROM BSS.ff.Invoice i
+LEFT JOIN BSS.ff.miscJob m ON m.JobID = i.JobId
+WHERE i.InvoiceNumber = 'to insert' AND m.JobNo = '2611933';</pre>
+            <div class="result-box">BSS  248205  to insert  2026-07-20  M3  2884</div>
+            <p>
+              Invoice <strong>248205</strong>, stored segment <strong>M3</strong> (a Misc job, JobId 2884),
+              invoice date 20-Jul-2026. The stored branch was <strong>B</strong> and the invoice&rsquo;s revenue
+              carried <strong>zero GST</strong> &mdash; so the numbering segment used was <strong>N</strong>. Note the
+              M3 rule in the SP (<code>if @Segment='M3' set @Branch=@pBranch</code>): for M3 the numbering branch
+              is the login branch, which here matched the job&rsquo;s own branch <strong>B (Bangkok)</strong>.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 3 &mdash; Inspect the Bangkok FINV series</div>
+          <div class="step-body">
+            <p>List every <code>B / FINV</code> series row and check which window covers the invoice date.</p>
+            <pre>SELECT BranchId, NType, Segment, YearCode, DateFrom, DateTo, Number, NFormat, isActive
+FROM appConfig.Numbers
+WHERE NType = 'FINV' AND BranchId = 'B'
+ORDER BY Segment, DateFrom;</pre>
+            <div class="result-box">B  FINV  N  26  2025-04-01  2026-03-31  2  Branch Taxtype YYMM99999  1
+B  FINV  X  26  2025-04-01  2026-03-31  0  Branch Taxtype YYMM99999  1
+B  FINV  Z  26  2025-04-01  2026-03-31  0  Branch Taxtype YYMM99999  1
+   ... (rows for YearCode 20, 22, 23, 24, 25 above) ...
+   NO row with DateFrom = 2026-04-01 / DateTo = 2027-03-31 for any segment</div>
+            <p>
+              Bangkok uses a <strong>fiscal</strong> year (Apr&ndash;Mar). Every segment (N, X, Z) stops at
+              <strong>2026-03-31</strong>. The invoice dated <strong>2026-07-20</strong> falls in the next window
+              (<strong>2026-04-01 &rarr; 2027-03-31</strong>), which was <strong>never created</strong>. Active rows
+              exist for the series &rarr; the SP takes the <code>to&nbsp;insert</code> branch.
+            </p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-header">Step 4 &mdash; Rule out branch mis-stamping (why only this row failed)</div>
+          <div class="step-body">
+            <p>
+              The screen&rsquo;s other invoices are <code>SGN&hellip;</code> (Singapore, code S &rarr; SG). To be sure 248205
+              was not simply stamped with the wrong branch, we compared how <em>every</em> branch&rsquo;s M3 invoice
+              is numbered.
+            </p>
+            <pre>SELECT TOP 30 i.InvoiceNumber, i.Segment, i.InvoiceDate, i.Branch AS InvBranch,
+       m.Branch AS JobBranch, m.BilledBy
+FROM ff.Invoice i LEFT JOIN ff.miscJob m ON m.JobID = i.JobId
+WHERE i.Segment = 'M3'
+ORDER BY i.InvoiceDate DESC;</pre>
+            <div class="result-box">M   (Mumbai)   MX270701152   InvBranch=M    JobBranch=M
+T   (Tuticorin) TX270701516  InvBranch=T    JobBranch=T
+DXB            XN260700558   InvBranch=DXB  JobBranch=DXB
+C              CN270700184   InvBranch=C    JobBranch=C
+W  (Antwerp)   26705994      InvBranch=W    JobBranch=W
+B  (Bangkok)   to insert     InvBranch=B    JobBranch=B   &lt;-- only failure</div>
+            <p>
+              Every M3 invoice numbers under <strong>its own branch</strong> and <code>InvBranch = JobBranch</code> for
+              all of them. Bangkok is the <strong>only</strong> branch that failed &mdash; and its job branch is
+              genuinely <strong>B</strong>. So 248205 is correctly a Bangkok invoice; the &ldquo;wrong format&rdquo;
+              impression came from comparing it against the unrelated Singapore (<code>SGN</code>) rows that share
+              the 517-row list. The single fault is the missing Bangkok FY window.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Root Cause</div>
+        <div class="alert alert-danger">
+          <strong>appConfig.Numbers &mdash; no FY2026-27 window for BranchId 'B', NType 'FINV'</strong>
+          Bangkok&rsquo;s FINV number series was never rolled into the new fiscal year. The latest rows for all
+          three segments (N, X, Z) end at <code>2026-03-31</code>; no row exists for
+          <code>2026-04-01 &rarr; 2027-03-31</code> (YearCode 27). Because an active series still exists for the
+          branch, <code>appConfig.Get_Number</code> returns the sentinel <code>to&nbsp;insert</code> for any invoice
+          dated after 31-Mar-2026, and <code>ff.Update_Invoice</code> saves that string as the invoice number with
+          no validation.
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Confirmation Queries</div>
+        <p>The queries that proved root cause, in order:</p>
+        <pre>-- (a) the invoice lives in BSS, is Misc/M3, zero-GST -> numbering segment N, branch B
+SELECT i.InvoiceId, i.InvoiceNumber, i.Segment, i.Branch, i.JobId
+FROM ff.Invoice i LEFT JOIN ff.miscJob m ON m.JobID = i.JobId
+WHERE i.InvoiceNumber = 'to insert' AND m.JobNo = '2611933';        -- 248205 / M3 / B
+
+-- (b) B/FINV series has NO row covering the 20-Jul-2026 invoice date
+SELECT BranchId, Segment, YearCode, DateFrom, DateTo, Number, NFormat
+FROM appConfig.Numbers
+WHERE NType = 'FINV' AND BranchId = 'B'
+ORDER BY Segment, DateFrom;                                          -- newest window ends 2026-03-31
+
+-- (c) every other branch's M3 invoice numbers under its own branch; only Bangkok stranded
+SELECT TOP 30 i.InvoiceNumber, i.Branch AS InvBranch, m.Branch AS JobBranch
+FROM ff.Invoice i LEFT JOIN ff.miscJob m ON m.JobID = i.JobId
+WHERE i.Segment = 'M3' ORDER BY i.InvoiceDate DESC;                  -- B = 'to insert', rest fine</pre>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title">Solution</div>
+        <p>
+          Applied and verified in the frontend on <strong>23 Jul 2026</strong> (invoice 248205 now shows
+          <strong>BN260700001</strong>). Two parts: create Bangkok&rsquo;s missing FY2026-27 FINV windows, and
+          back-fill the first number of the new year onto the stranded invoice.
+        </p>
+
+        <div class="alert alert-info">
+          <strong>How to run this in SSMS &mdash; run the block ONCE, not statement by statement</strong>
+          Highlight the entire block below and press Execute a single time. Running the INSERT, UPDATE and
+          verify SELECTs separately caused confusion during this ticket (an <code>INSERT</code> ran alone, and a
+          <code>BEGIN TRAN</code> left open held locks that briefly blanked the Invoice list on the frontend until
+          <code>COMMIT</code>). This version has <strong>no open transaction</strong> &mdash; every statement
+          auto-commits, so nothing is left pending.
+        </div>
+
+        <pre>USE BSS;
+
+-- Part A: create Bangkok's missing FY2026-27 FINV windows (fiscal Apr-Mar, YearCode 27).
+--         N counter starts at 1 so it accounts for BN260700001 assigned below;
+--         the next zero-GST Bangkok invoice will be ...00002. X and Z start at 0.
+INSERT INTO appConfig.Numbers (BranchId, Segment, NType, Number, YearCode, DateFrom, DateTo, isActive, NFormat, POD)
+VALUES
+ ('B','N','FINV', 1, '27', '2026-04-01','2027-03-31', 1, 'Branch Taxtype YYMM99999',''),
+ ('B','X','FINV', 0, '27', '2026-04-01','2027-03-31', 1, 'Branch Taxtype YYMM99999',''),
+ ('B','Z','FINV', 0, '27', '2026-04-01','2027-03-31', 1, 'Branch Taxtype YYMM99999','');
+
+-- Part B: back-fill the stranded invoice with the first N number of the new FY.
+--         Format 'Branch Taxtype YYMM99999' -> B + N + 2607 + 00001 = BN260700001.
+UPDATE ff.Invoice SET InvoiceNumber = 'BN260700001'
+WHERE InvoiceId = 248205 AND InvoiceNumber = 'to insert';   -- 1 row affected
+
+-- Verify
+SELECT * FROM appConfig.Numbers WHERE BranchId='B' AND NType='FINV' AND YearCode='27';    -- 3 rows
+SELECT InvoiceId, InvoiceNumber, Branch, Segment FROM ff.Invoice WHERE InvoiceId=248205;  -- BN260700001</pre>
+
+        <div class="alert alert-warning">
+          <strong>Revert query &mdash; also run ONCE as a single block</strong>
+          Safe only while no other Bangkok FINV invoice has drawn from these rows (i.e. the <code>N</code> row&rsquo;s
+          <code>Number</code> is still 1 and X / Z are still 0). Once other invoices issue real numbers from the
+          new windows, do <strong>not</strong> delete the rows.
+        </div>
+
+        <pre>USE BSS;
+
+-- Put the invoice back to its original value
+UPDATE ff.Invoice SET InvoiceNumber = 'to insert'
+WHERE InvoiceId = 248205 AND InvoiceNumber = 'BN260700001';   -- 1 row affected
+
+-- Remove the 3 FY2026-27 windows (guarded: only untouched rows)
+DELETE FROM appConfig.Numbers
+WHERE BranchId='B' AND NType='FINV' AND YearCode='27'
+  AND DateFrom='2026-04-01' AND DateTo='2027-03-31'
+  AND Segment IN ('N','X','Z')
+  AND Number IN (0,1);                                        -- 3 rows affected
+
+-- Verify
+SELECT InvoiceId, InvoiceNumber FROM ff.Invoice WHERE InvoiceId=248205;                   -- 'to insert'
+SELECT * FROM appConfig.Numbers WHERE BranchId='B' AND NType='FINV' AND YearCode='27';    -- 0 rows</pre>
+
+        <div class="alert alert-info">
+          <strong>Permanent fix (pending &mdash; code change)</strong>
+          The data fix above resolves this invoice but the same failure will return at every fiscal-year
+          boundary for any branch whose next window was not pre-created. <code>appConfig.Get_Number</code>
+          should <em>auto-create</em> the next FY window and continue &mdash; it already does exactly this for
+          <code>NType = 'Q'</code> (quotations) &mdash; instead of returning <code>to&nbsp;insert</code>. Alternatively a
+          scheduled year-rollover job should clone every active series into the new FY before 1-April. Until
+          that ships, series windows must be created manually each year (see Recurrence Risk).
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- Recurrence Risk — always include this section -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Recurrence Risk</div>
+    <table>
+      <thead>
+        <tr><th>Issue</th><th>Risk</th><th>Will It Recur?</th><th>Action Required Until Permanent Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Invoice number saved as &ldquo;to insert&rdquo; (lapsed FY window)</td>
+          <td style="color: #c0392b; font-weight: 700;">High</td>
+          <td>
+            Yes &mdash; every <code>appConfig.Numbers</code> series carries a <code>DateTo</code>. Any branch / NType
+            whose next fiscal-year (or calendar-year) window is not pre-created will strand the first invoice
+            after the boundary with <code>to&nbsp;insert</code>. Bangkok&rsquo;s <code>X</code> and <code>Z</code>
+            segments were equally lapsed and are now fixed too, but other branches / NTypes may still lack their
+            next window.
+          </td>
+          <td>
+            Before each fiscal-year rollover, confirm a covering row exists for every active
+            <code>BranchId / NType / Segment</code>. When any number saves as <code>to&nbsp;insert</code>,
+            <code>toinsert</code> or <code>ParameterErr</code>, create/refresh the series row (correct
+            <code>DateFrom</code>/<code>DateTo</code>/<code>YearCode</code> and the same <code>NFormat</code> as the
+            prior window), then back-fill the number. Remember Bangkok is fiscal (Apr&ndash;Mar); Singapore/DXB are
+            calendar (Jan&ndash;Dec).
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Observations -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Observations</div>
+    <p style="color: #333; line-height: 1.7; margin-bottom: 10px;">
+      Points that looked wrong during review but are expected behaviour &mdash; not bugs:
+    </p>
+    <table>
+      <thead>
+        <tr><th>What was seen</th><th>Why it is not a bug</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>The &ldquo;format is wrong&rdquo; complaint &mdash; this invoice&rsquo;s number differs from the other rows on the screen (<code>BN&hellip;</code> vs <code>SGN&hellip;</code>).</td>
+          <td>The Invoice list shows 517 rows across branches. The <code>SGN&hellip;</code> rows are Singapore (code S &rarr; SG) invoices; the Bangkok format is genuinely <code>BN&hellip;</code>. Both are correct for their own branch. There is no separate format defect &mdash; the only fault was the missing FY window, which produced the literal <code>to&nbsp;insert</code> instead of any number.</td>
+        </tr>
+        <tr>
+          <td>Older Bangkok M3 invoices from 2023 were numbered <code>SGN&hellip;</code> (Singapore series) even though stored under branch B.</td>
+          <td>That reflects earlier branch-derivation behaviour (the <code>ff.Fn_BillBranch</code> logic was changed on 03-Feb-2026). Current, correct behaviour numbers every M3 invoice under its own branch, as confirmed across all recent M3 rows.</td>
+        </tr>
+        <tr>
+          <td>The Invoice list briefly showed no rows on the frontend during the fix.</td>
+          <td>An <code>SSMS</code> query window had an uncommitted <code>BEGIN TRAN</code> open, holding locks that blocked the site&rsquo;s reads. Resolved by <code>COMMIT</code>. Always close a <code>BEGIN TRAN</code> block with <code>COMMIT</code>/<code>ROLLBACK</code> in the same session &mdash; or run these fixes without an explicit transaction, as documented above.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Tables & Objects Involved -->
+  <div style="margin-bottom: 28px;">
+    <div style="font-size: 14px; font-weight: 700; color: #1a3c6e; border-left: 4px solid #1a3c6e; padding-left: 10px; margin-bottom: 12px;">Tables &amp; Objects Involved</div>
+    <table>
+      <thead>
+        <tr><th>Object</th><th>Type</th><th>Role</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>appConfig.Get_Number</td><td>SP</td><td>Number generator. Returns the literal <code>to&nbsp;insert</code> when an active series exists but no row covers the date; returns <code>ParameterErr</code> when no series row exists at all.</td></tr>
+        <tr><td>appConfig.Numbers</td><td>Table</td><td>Number series per Branch / NType / Segment / FY window. The missing <code>B / FINV</code> FY2026-27 rows are the root cause.</td></tr>
+        <tr><td>ff.Update_Invoice</td><td>SP</td><td>Generates &amp; saves the invoice. Calls <code>Get_Number</code> with <code>NType='FINV'</code> and stores the result in <code>InvoiceNumber</code> without validating the sentinel strings.</td></tr>
+        <tr><td>ff.Fn_BillBranch</td><td>Function</td><td>Derives the billing branch from segment + job id. Bypassed for M3, where the numbering branch is the login branch.</td></tr>
+        <tr><td>ff.Invoice</td><td>Table</td><td>Holds invoice 248205; <code>InvoiceNumber</code> was <code>to&nbsp;insert</code>, back-filled to <code>BN260700001</code>.</td></tr>
+        <tr><td>ff.miscJob</td><td>Table</td><td>Misc job 2884 (JobNo 2611933), branch B &mdash; the polymorphic target of <code>Invoice.JobId</code> for Misc segments.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <span>BLISS &mdash; Bug Report &nbsp;|&nbsp; TASK-31354 &nbsp;|&nbsp; Invoice</span>
+    <span>23 Jul 2026</span>
+  </div>
+
+</body>
+</html>
